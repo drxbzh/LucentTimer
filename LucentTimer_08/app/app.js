@@ -1,6 +1,6 @@
 (()=>{
 const $=id=>document.getElementById(id);
-const defaults={startMethod:'hold',inspectionEnabled:false,inspectionLength:15,precision:2,theme:'dark',leadingZero:true,keepAwake:true,vibrationEnabled:true,soundEnabled:true,scrambleLength:0,platformMode:'mobile',timerSize:100,timerFont:'roboto',timerWeight:'light'};
+const defaults={startMethod:'hold',inspectionEnabled:false,inspectionLength:15,precision:2,theme:'dark',leadingZero:true,keepAwake:true,vibrationEnabled:true,soundEnabled:true,scrambleLength:0,platformMode:'auto',timerSize:100,timerFont:'roboto',timerWeight:'light'};
 let storedSettings={};
 try{storedSettings=JSON.parse(localStorage.getItem('ct-settings')||'{}')||{}}catch{}
 let settings={...defaults,...storedSettings};
@@ -12,6 +12,12 @@ let solves=storedSolves.map(v=>typeof v==='number'?{ms:v,scramble:'',penalty:0}:
 let state='idle',resultShown=false,start=0,inspectionStart=0,raf=0,press=null,wake=null,pendingPenalty=0;
 let currentScramble='',scrambleModule=null,scrambleBusy=false,audioContext=null,inspectionCues=new Set();
 const HOLD_MS=300,SWIPE=65;
+const detectPlatformMode=()=>{
+  const coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+  const touchCapable = navigator.maxTouchPoints > 0 || 'ontouchstart' in window;
+  return coarse || touchCapable ? 'mobile' : 'desktop';
+};
+const effectivePlatformMode=()=> settings.platformMode === 'auto' ? detectPlatformMode() : settings.platformMode;
 const fmt=ms=>{let s=(Math.max(0,ms)/1000).toFixed(+settings.precision);return !settings.leadingZero&&s.startsWith('0')?s.slice(1):s};
 const show=ms=>$('time').textContent=fmt(ms);
 const save=()=>localStorage.setItem('ct-settings',JSON.stringify(settings));
@@ -21,7 +27,7 @@ const effective=v=>v.ms+(v.penalty===2?2000:0);
 const label=v=>isDnf(v)?'DNF':fmt(effective(v))+(v.penalty===2?'+':'');
 function render(){
   document.body.classList.toggle('light',settings.theme==='light');
-  $('platformMode').value=settings.platformMode;document.body.dataset.platform=settings.platformMode;
+  $('platformMode').value=settings.platformMode;document.body.dataset.platform=effectivePlatformMode();
   $('timerSize').value=settings.timerSize;$('timerSizeValue').textContent=settings.timerSize+'%';document.documentElement.style.setProperty('--timer-scale',settings.timerSize/100);
   $('timerFont').value=settings.timerFont;$('timerWeight').value=settings.timerWeight;
   $('startMethod').value=settings.startMethod;$('inspectionEnabled').checked=settings.inspectionEnabled;$('inspectionLength').value=settings.inspectionLength;$('precision').value=settings.precision;
@@ -48,7 +54,6 @@ function setScrambleHidden(on){$('scramblePanel').classList.toggle('away',!!on)}
 function setReady(on){$('time').classList.toggle('ready',!!on)}
 function setStatus(text){const s=$('status');s.textContent=text;s.classList.toggle('visible',!!text)}
 
-/* ---- Timer flow: idle -> (inspection ->) running -> idle ---- */
 function run(){
   if(state==='inspection'){
     const left=settings.inspectionLength-(performance.now()-inspectionStart)/1000;
@@ -76,7 +81,6 @@ function stop(){
   solves.unshift(solve);solves=solves.slice(0,500);saveSolves();render();generateScramble();
 }
 
-/* ---- Last-solve actions: +2 toggle and delete (swipe up / swipe down, or 2 / Backspace) ---- */
 const line=$('swipeLine'),lineLabel=$('swipeLabel'),glow=$('glow');
 let lineTimer=0,flashToken=0;
 const confirmOpen=()=>!$('confirm').hidden;
@@ -96,7 +100,6 @@ function confirmDelete(){
 $('confirmYes').onclick=()=>{confirmDelete();$('confirmYes').blur()};
 $('confirmNo').onclick=()=>{cancelDelete();$('confirmNo').blur()};
 
-/* Touch-only visual feedback: green line + label for up, soft red glow from the bottom for down */
 function resetLine(){clearTimeout(lineTimer);line.classList.remove('release','commit','armed');line.style.opacity='0';line.style.height='0px'}
 function swipeMove(p,dx,dy){
   const vertical=Math.abs(dy)>12&&Math.abs(dy)>Math.abs(dx)*1.25;
@@ -122,9 +125,6 @@ function commitSwipe(p,dir){
   else{askDelete();glow.style.opacity='.42'}
 }
 
-/* ---- Press handling (shared by touch/mouse and the Space key) ----
-   Starting from idle or from inspection works the same way:
-   hold method / Space: hold 300 ms until ready, release to go. Tap method: release without moving. */
 function pressStart(source,e){
   if(press)return;
   const allowed=source==='key'||settings.startMethod!=='keyboard';
@@ -141,10 +141,9 @@ function pressEnd(cancel){
   if(p.holdMode?p.armed:!p.moved){if(state==='inspection'){cancelAnimationFrame(raf);run()}else begin()}
 }
 
-// Desktop menu gestures: right-click either half of the timer screen.
-document.addEventListener('contextmenu',e=>{if(settings.platformMode==='desktop'){e.preventDefault();}});
+document.addEventListener('contextmenu',e=>{if(effectivePlatformMode()==='desktop'){e.preventDefault();}});
 document.addEventListener('pointerdown',e=>{
-  if(settings.platformMode!=='desktop'||e.button!==2)return;
+  if(effectivePlatformMode()!=='desktop'||e.button!==2)return;
   e.preventDefault();
   const inDrawer=!!e.target.closest('.drawer');
   if(drawersOpen()){if(!inDrawer)close();return;}
@@ -169,18 +168,13 @@ document.addEventListener('pointermove',e=>{
 document.addEventListener('pointerup',e=>{
   if(!press||press.source!=='pointer'||press.id!==e.pointerId)return;
   const p=press,dx=e.clientX-p.x,dy=e.clientY-p.y;
-  // Recovery: on touch devices, a horizontal swipe should still be able to open the drawers even when the platform is set to desktop.
-  if((settings.platformMode==='mobile'||e.pointerType==='touch')&&Math.abs(dx)>SWIPE&&Math.abs(dx)>Math.abs(dy)*1.25){pressEnd(true);open(dx<0?'quick':'advanced');return}
+  if((effectivePlatformMode()==='mobile'||e.pointerType==='touch')&&Math.abs(dx)>SWIPE&&Math.abs(dx)>Math.abs(dy)*1.25){pressEnd(true);open(dx<0?'quick':'advanced');return}
   if(Math.abs(dy)>SWIPE&&Math.abs(dy)>Math.abs(dx)*1.25){if(state==='idle'&&resultShown)commitSwipe(p,dy<0?'up':'down');pressEnd(true);return}
   pressEnd(false);
 },true);
 document.addEventListener('pointercancel',()=>{if(press&&press.source==='pointer')pressEnd(true)},true);
 function interactiveTarget(target){return !!target.closest('button,input,select,textarea,a,[data-ui-control]')}
 
-/* ---- Keyboard ----
-   Space: hold & release (same as touch hold). While solving, any key stops.
-   When idle: Q quick settings, A advanced, N new scramble, 2 toggles +2, Backspace/Delete deletes (asks first).
-   Esc cancels inspection or closes a drawer. */
 const modifierKeys=new Set(['Shift','Control','Alt','Meta','CapsLock','Fn','OS']);
 const typing=t=>t.matches('input,select,textarea,[contenteditable="true"]');
 document.addEventListener('keydown',e=>{
@@ -215,7 +209,7 @@ function randomMoveScramble(n){
   while(out.length<n){
    const f=faces[Math.floor(Math.random()*6)];
    if(f===last)continue;
-   if(prev&&axis[prev]===axis[last]&&axis[f]===axis[last])continue; // no U D U style sandwiches
+   if(prev&&axis[prev]===axis[last]&&axis[f]===axis[last])continue;
    out.push(f+suffix[Math.floor(Math.random()*3)]);prev=last;last=f;
   }
   return out.join(' ');
