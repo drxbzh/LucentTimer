@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#101116">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg">
+<title>LucentTimer</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<main id="screen">
+  <div id="scramblePanel">
+    <div id="scramble" aria-live="polite">Generating scramble…</div>
+    <button id="newScramble" type="button">New scramble</button>
+  </div>
+  <div id="timerStack">
+    <div id="status" aria-live="polite"></div>
+    <div id="time">0.00</div>
+    <div id="confirm" role="alertdialog" aria-live="assertive" hidden><span>Delete this solve?</span><button id="confirmYes" type="button">Delete</button><button id="confirmNo" type="button">Cancel</button></div>
+  </div>
+</main>
+<div id="glow" aria-hidden="true"></div>
+<div id="swipeLine" aria-hidden="true"><span id="swipeLabel">+2</span></div>
+<div id="scrim"></div>
+<aside id="quick" class="drawer right">
+  <header><div><small>LUCENTTIMER</small><h1>Quick settings</h1></div><button data-close aria-label="Close">×</button></header>
+  <section><h2>Timer controls</h2>
+    <label>Start method<select id="startMethod"><option value="hold">Hold and release</option><option value="tap">Tap</option><option value="keyboard">Keyboard only (touch off)</option></select></label>
+    <label>Inspection<input id="inspectionEnabled" type="checkbox"></label>
+  </section>
+  <section><h2>Session</h2>
+    <div class="stats"><div><b id="count">0</b><small>solves</small></div><div><b id="best">—</b><small>best</small></div><div><b id="mean">—</b><small>mean</small></div></div>
+    <div class="historyHead"><h2>Recent solves</h2></div>
+    <ol id="history"><li class="empty">Your solves will appear here.</li></ol>
+  </section>
+</aside>
+<aside id="advanced" class="drawer left">
+  <div class="lt-adv-page" id="lucentAdvMain">
+    <header><div><small>LUCENTTIMER</small><h1>Advanced</h1></div><button data-close aria-label="Close">×</button></header>
+    <section class="platform-setting">
+      <label>Platform mode<select id="platformMode"><option value="auto">Auto (recommended)</option><option value="mobile">Mobile</option><option value="desktop">Desktop</option></select></label>
+      <p class="hint">Auto adapts gestures to this device. Choose Mobile or Desktop to override.</p>
+    </section>
+    <nav>
+      <button class="navrow" data-go="advTimer"><span>Timer</span><i>›</i></button>
+      <button class="navrow" data-go="advScramble"><span>Scramble</span><i>›</i></button>
+      <button class="navrow" data-go="advDisplay"><span>Display</span><i>›</i></button>
+      <button class="navrow" data-go="advFeedback"><span>Feedback</span><i>›</i></button>
+      <button class="navrow" data-go="advData"><span>Data</span><i>›</i></button>
+      <button class="navrow" data-go="advAbout"><span>About</span><i>›</i></button>
+    </nav>
+  </div>
+  <div class="lt-adv-page sub" id="advTimer">
+    <header><div class="titlebar"><button data-back aria-label="Back">‹</button><h1>Timer</h1></div><button data-close aria-label="Close">×</button></header>
+    <section>
+      <label>Inspection duration<select id="inspectionLength"><option value="15">15 seconds</option><option value="17">17 seconds</option></select></label>
+      <label>Precision<select id="precision"><option value="2">0.00</option><option value="3">0.000</option></select></label>
+      <label>Show leading zero<input id="leadingZero" type="checkbox" checked></label>
+    </section>
+    <section>
+      <label class="stacked-control" for="timerSize">Timer size <output id="timerSizeValue">100%</output></label>
+      <input id="timerSize" class="range-control" type="range" min="60" max="125" step="1" value="100">
+      <label>Timer font<select id="timerFont"><option value="roboto">Roboto</option><option value="lcd">LCD / Seven-segment</option><option value="caveat">Caveat</option><option value="orbitron">Orbitron</option><option value="rajdhani">Rajdhani</option></select></label>
+      <label>Font weight<select id="timerWeight"><option value="light">Light</option><option value="medium">Medium</option><option value="bold">Bold</option></select></label>
+      <p class="hint">Font and weight settings affect only the timer digits.</p>
+    </section>
+  </div>
+  <div class="lt-adv-page sub" id="advScramble">
+    <header><div class="titlebar"><button data-back aria-label="Back">‹</button><h1>Scramble</h1></div><button data-close aria-label="Close">×</button></header>
+    <section>
+      <label>Scramble length<input id="scrambleLength" type="number" inputmode="numeric" min="1" max="200" step="1" placeholder="Auto"></label>
+      <p class="hint">Leave empty for official random-state scrambles (about 20 moves). Enter a number to use that many random moves. Custom lengths work offline.</p>
+    </section>
+  </div>
+  <div class="lt-adv-page sub" id="advDisplay">
+    <header><div class="titlebar"><button data-back aria-label="Back">‹</button><h1>Display</h1></div><button data-close aria-label="Close">×</button></header>
+    <section>
+      <label>Appearance<select id="theme"><option value="dark">Dark</option><option value="light">Light</option></select></label>
+      <label>Keep screen awake<input id="keepAwake" type="checkbox" checked></label>
+    </section>
+  </div>
+  <div class="lt-adv-page sub" id="advFeedback">
+    <header><div class="titlebar"><button data-back aria-label="Back">‹</button><h1>Feedback</h1></div><button data-close aria-label="Close">×</button></header>
+    <section>
+      <label>Vibration cues<input id="vibrationEnabled" type="checkbox" checked></label>
+      <label>Audio cues<input id="soundEnabled" type="checkbox" checked></label>
+      <p class="hint">A short vibration confirms when hold-to-start is armed. Inspection warnings use brief audio and haptic cues.</p>
+    </section>
+  </div>
+  <div class="lt-adv-page sub" id="advData">
+    <header><div class="titlebar"><button data-back aria-label="Back">‹</button><h1>Data</h1></div><button data-close aria-label="Close">×</button></header>
+    <section>
+      <label>Saved solves<button id="clear" class="danger" type="button">Clear all</button></label>
+      <p class="hint">Settings and solves are stored on this device only.</p>
+    </section>
+  </div>
+  <div class="lt-adv-page sub" id="advAbout">
+    <header><div class="titlebar"><button data-back aria-label="Back">‹</button><h1>About</h1></div><button data-close aria-label="Close">×</button></header>
+    <section><p class="about">LucentTimer. Settings and solve history are stored on this device. Each solve is saved with its scramble.</p><p class="hint">Version 0.8</p></section>
+  </div>
+</aside>
+<script type="module" src="app.js"></script>
+</body>
+</html>
