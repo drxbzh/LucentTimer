@@ -32,7 +32,7 @@ function render(){
   $('timerFont').value=settings.timerFont;$('timerWeight').value=settings.timerWeight;$('time').dataset.font=settings.timerFont;$('time').dataset.weight=settings.timerWeight;
   $('startMethod').value=settings.startMethod;$('inspectionEnabled').checked=settings.inspectionEnabled;$('inspectionLength').value=settings.inspectionLength;$('precision').value=settings.precision;
   $('leadingZero').checked=settings.leadingZero;$('theme').value=settings.theme;$('keepAwake').checked=settings.keepAwake;$('soundEnabled').checked=settings.soundEnabled;$('vibrationEnabled').checked=settings.vibrationEnabled;$('scrambleLength').value=settings.scrambleLength||'';
-  const h=$('history');h.innerHTML='';solves.slice(0,30).forEach((v,i)=>{const li=document.createElement('li');const number=document.createElement('span');number.textContent=`${solves.length-i}.`;const val=document.createElement('span');val.textContent=label(v);li.append(number,val);if(v.scramble)li.classList.add('has-scramble');li.onclick=()=>{if(v.scramble){alert(v.scramble)}};h.append(li)});
+  const h=$('history');h.innerHTML='';solves.slice(0,30).forEach((v,i)=>{const li=document.createElement('li');const number=document.createElement('span');number.textContent=`${solves.length-i}.`;const val=document.createElement('span');val.textContent=label(v);li.append(number,val);if(v.scramble)li.classList.add('has-scramble');li.onclick=()=>{if(v.scramble)alert(v.scramble)};h.append(li)});
   if(!solves.length)h.innerHTML='<li class="empty">Your solves will appear here.</li>';
   const valid=solves.filter(v=>!isDnf(v)).map(effective);
   $('count').textContent=solves.length;$('best').textContent=valid.length?fmt(Math.min(...valid)):'—';$('mean').textContent=valid.length?fmt(valid.reduce((a,b)=>a+b,0)/valid.length):'—';
@@ -128,7 +128,7 @@ function commitSwipe(p,dir){
 function pressStart(source,e){
   if(press)return;
   const allowed=source==='key'||settings.startMethod!=='keyboard';
-  const holdMode=settings.startMethod==='hold'||(source==='key'&&settings.startMethod==='keyboard');
+  const holdMode=source==='key' ? true : settings.startMethod==='hold';
   press={source,id:e?.pointerId,x:e?.clientX,y:e?.clientY,moved:false,armed:false,allowed,holdMode,timer:0,vertical:false,ticked:false,committed:false};
   setPressed(true);
   if(allowed&&(state==='inspection'||!settings.inspectionEnabled))setScrambleHidden(true);
