@@ -32,7 +32,7 @@ function render(){
   $('timerFont').value=settings.timerFont;$('timerWeight').value=settings.timerWeight;$('time').dataset.font=settings.timerFont;$('time').dataset.weight=settings.timerWeight;
   $('startMethod').value=settings.startMethod;$('inspectionEnabled').checked=settings.inspectionEnabled;$('inspectionLength').value=settings.inspectionLength;$('precision').value=settings.precision;
   $('leadingZero').checked=settings.leadingZero;$('theme').value=settings.theme;$('keepAwake').checked=settings.keepAwake;$('soundEnabled').checked=settings.soundEnabled;$('vibrationEnabled').checked=settings.vibrationEnabled;$('scrambleLength').value=settings.scrambleLength||'';
-  const h=$('history');h.innerHTML='';solves.slice(0,30).forEach((v,i)=>{const li=document.createElement('li');const number=document.createElement('span');number.textContent=`${solves.length-i}.`;const val=document.createElement('span');val.textContent=label(v);li.append(number,val);if(v.scramble)li.classList.add('has-scramble');li.onclick=()=>{if(v.scramble){alert(v.scramble)}};h.append(li)});
+  const h=$('history');h.innerHTML='';solves.slice(0,30).forEach((v,i)=>{const li=document.createElement('li');const number=document.createElement('span');number.textContent=`${solves.length-i}.`;const val=document.createElement('span');val.textContent=label(v);li.append(number,val);if(v.scramble)li.classList.add('has-scramble');li.onclick=()=>{if(v.scramble)alert(v.scramble)};h.append(li)});
   if(!solves.length)h.innerHTML='<li class="empty">Your solves will appear here.</li>';
   const valid=solves.filter(v=>!isDnf(v)).map(effective);
   $('count').textContent=solves.length;$('best').textContent=valid.length?fmt(Math.min(...valid)):'—';$('mean').textContent=valid.length?fmt(valid.reduce((a,b)=>a+b,0)/valid.length):'—';
@@ -108,10 +108,10 @@ function swipeMove(p,dx,dy){
   const progress=Math.min(Math.abs(dy)/SWIPE,1);
   if(progress>=1){if(!p.ticked){p.ticked=true;vibrate(8)}}else p.ticked=false;
   if(dy<0){
-   glow.style.opacity='0';clearTimeout(lineTimer);line.classList.remove('release','commit');
-   lineLabel.textContent=solves[0]&&solves[0].penalty===2?'−2':'+2';
-   line.style.left=p.x+'px';line.style.top=(p.y+dy)+'px';line.style.height=(-dy)+'px';line.style.opacity=String(.3+.7*progress);
-   line.classList.toggle('armed',progress>=1);
+    glow.style.opacity='0';clearTimeout(lineTimer);line.classList.remove('release','commit');
+    lineLabel.textContent=solves[0]&&solves[0].penalty===2?'−2':'+2';
+    line.style.left=p.x+'px';line.style.top=(p.y+dy)+'px';line.style.height=(-dy)+'px';line.style.opacity=String(.3+.7*progress);
+    line.classList.toggle('armed',progress>=1);
   }else{resetLine();glow.style.opacity=String(.08+.92*progress)}
 }
 function hideSwipe(p,keepVertical){
@@ -142,7 +142,7 @@ function pressEnd(cancel){
 }
 
 document.addEventListener('pointerdown',e=>{
-  if(effectivePlatformMode()!=='desktop'||e.button!==0)return;
+  if(effectivePlatformMode()!=='desktop'||e.pointerType==='touch'||e.button!==0)return;
   const inDrawer=!!e.target.closest('.drawer');
   if(drawersOpen()){
     if(inDrawer)return;
@@ -189,8 +189,8 @@ document.addEventListener('keydown',e=>{
   const k=e.key.length===1?e.key.toLowerCase():e.key,plain=!(e.ctrlKey||e.metaKey||e.altKey);
   if(confirmOpen()){e.preventDefault();if(k==='Enter'||k==='y')confirmDelete();else if(k==='Escape'||k==='n')cancelDelete();return}
   if(drawersOpen()){
-   if(plain&&(k==='q'||k==='a')){e.preventDefault();const which=k==='q'?'quick':'advanced';$(which).classList.contains('open')?close():open(which)}
-   return;
+    if(plain&&(k==='q'||k==='a')){e.preventDefault();const which=k==='q'?'quick':'advanced';$(which).classList.contains('open')?close():open(which)}
+    return;
   }
   if(state==='running'){e.preventDefault();stop();return}
   if(e.code==='Space'){e.preventDefault();pressStart('key');return}
@@ -210,13 +210,13 @@ document.addEventListener('keyup',e=>{
 addEventListener('blur',()=>pressEnd(true));
 
 function randomMoveScramble(n){
-  const faces=['U','D','L','R','F','B'],axis={U:0,D:0,L:1,R:1,F:2,B:2},suffix=['',"'",'2'],out=[];
+  const faces=['U','D','L','R','F','B'],axis={U:0,D:0,L:1,R:1,F:2,B:2},suffix=['','','2'],out=[];
   let last='',prev='';
   while(out.length<n){
-   const f=faces[Math.floor(Math.random()*6)];
-   if(f===last)continue;
-   if(prev&&axis[prev]===axis[last]&&axis[f]===axis[last])continue;
-   out.push(f+suffix[Math.floor(Math.random()*3)]);prev=last;last=f;
+    const f=faces[Math.floor(Math.random()*6)];
+    if(f===last)continue;
+    if(prev&&axis[prev]===axis[last]&&axis[f]===axis[last])continue;
+    out.push(f+suffix[Math.floor(Math.random()*3)]);prev=last;last=f;
   }
   return out.join(' ');
 }
@@ -241,8 +241,8 @@ $('inspectionLength').onchange=e=>{settings.inspectionLength=+e.target.value;sav
 $('clear').onclick=()=>{if(confirm('Clear all saved solves?')){solves=[];saveSolves();resultShown=false;show(0);setStatus('');render()}};
 async function applyWake(){
   try{
-   if(settings.keepAwake&&navigator.wakeLock&&document.visibilityState==='visible'){if(!wake||wake.released)wake=await navigator.wakeLock.request('screen')}
-   else if(wake){await wake.release();wake=null}
+    if(settings.keepAwake&&navigator.wakeLock&&document.visibilityState==='visible'){if(!wake||wake.released)wake=await navigator.wakeLock.request('screen')}
+    else if(wake){await wake.release();wake=null}
   }catch{}
 }
 $('keepAwake').addEventListener('change',e=>{settings.keepAwake=e.target.checked;save();applyWake()});
