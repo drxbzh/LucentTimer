@@ -26,14 +26,14 @@
 <div id="scrim"></div>
 <aside id="quick" class="drawer right">
   <header><div><small>LUCENTTIMER</small><h1>Quick settings</h1></div><button data-close aria-label="Close">×</button></header>
+  <section id="sessionOverview">
+    <div class="stats"><div><small>Ao5</small><b id="ao5">—</b></div><div><small>Ao12</small><b id="ao12">—</b></div></div>
+    <ol id="history"><li class="empty">Your solves will appear here.</li></ol>
+    <button id="historyToggle" class="historyToggle" type="button" aria-expanded="false" aria-controls="history" hidden>Show all</button>
+  </section>
   <section><h2>Timer controls</h2>
     <label>Start method<select id="startMethod"><option value="hold">Hold and release</option><option value="tap">Tap</option><option value="keyboard">Keyboard only (touch off)</option></select></label>
     <label>Inspection<input id="inspectionEnabled" type="checkbox"></label>
-  </section>
-  <section><h2>Session</h2>
-    <div class="stats"><div><b id="count">0</b><small>solves</small></div><div><b id="best">—</b><small>best</small></div><div><b id="mean">—</b><small>mean</small></div></div>
-    <div class="historyHead"><h2>Recent solves</h2></div>
-    <ol id="history"><li class="empty">Your solves will appear here.</li></ol>
   </section>
 </aside>
 <aside id="advanced" class="drawer left">

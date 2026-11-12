@@ -25,6 +25,18 @@ const saveSolves=()=>localStorage.setItem('ct-solves',JSON.stringify(solves));
 const isDnf=v=>v.penalty==='dnf';
 const effective=v=>v.ms+(v.penalty===2?2000:0);
 const label=v=>isDnf(v)?'DNF':fmt(effective(v))+(v.penalty===2?'+':'');
+const RECENT_COUNT=5;let timesExpanded=false;
+// Session totals (solve count / best / mean). No longer shown in the UI, kept for any feature that needs them.
+const sessionStats=()=>{const valid=solves.filter(v=>!isDnf(v)).map(effective);return{count:solves.length,best:valid.length?Math.min(...valid):null,mean:valid.length?valid.reduce((a,b)=>a+b,0)/valid.length:null}};
+// Average of the n most recent solves (WCA style): drop best and worst, mean of the rest.
+// Returns null if fewer than n solves, 'DNF' if 2+ DNFs, otherwise milliseconds. DNF counts as worst; +2 is included.
+function averageOf(n){
+  if(solves.length<n)return null;
+  const vals=solves.slice(0,n).map(v=>isDnf(v)?Infinity:effective(v)).sort((a,b)=>a-b);
+  if(vals[n-2]===Infinity)return'DNF';
+  const mid=vals.slice(1,n-1);return mid.reduce((a,b)=>a+b,0)/mid.length;
+}
+const fmtAo=a=>a===null?'—':a==='DNF'?'DNF':fmt(a);
 function render(){
   document.body.classList.toggle('light',settings.theme==='light');
   $('platformMode').value=settings.platformMode;document.body.dataset.platform=effectivePlatformMode();
@@ -32,11 +44,15 @@ function render(){
   $('timerFont').value=settings.timerFont;$('timerWeight').value=settings.timerWeight;$('time').dataset.font=settings.timerFont;$('time').dataset.weight=settings.timerWeight;
   $('startMethod').value=settings.startMethod;$('inspectionEnabled').checked=settings.inspectionEnabled;$('inspectionLength').value=settings.inspectionLength;$('precision').value=settings.precision;
   $('leadingZero').checked=settings.leadingZero;$('theme').value=settings.theme;$('keepAwake').checked=settings.keepAwake;$('soundEnabled').checked=settings.soundEnabled;$('vibrationEnabled').checked=settings.vibrationEnabled;$('scrambleLength').value=settings.scrambleLength||'';
-  const h=$('history');h.innerHTML='';solves.slice(0,30).forEach((v,i)=>{const li=document.createElement('li');const number=document.createElement('span');number.textContent=`${solves.length-i}.`;const val=document.createElement('span');val.textContent=label(v);li.append(number,val);if(v.scramble)li.classList.add('has-scramble');li.onclick=()=>{if(v.scramble)alert(v.scramble)};h.append(li)});
+  // Session overview: Ao5 / Ao12 plus recorded times (newest first; 5 by default, all when expanded).
+  $('ao5').textContent=fmtAo(averageOf(5));$('ao12').textContent=fmtAo(averageOf(12));
+  const h=$('history');h.innerHTML='';
+  (timesExpanded?solves:solves.slice(0,RECENT_COUNT)).forEach((v,i)=>{const li=document.createElement('li');const number=document.createElement('span');number.textContent=`${solves.length-i}.`;const val=document.createElement('span');val.textContent=label(v);li.append(number,val);if(v.scramble)li.classList.add('has-scramble');li.onclick=()=>{if(v.scramble)alert(v.scramble)};h.append(li)});
   if(!solves.length)h.innerHTML='<li class="empty">Your solves will appear here.</li>';
-  const valid=solves.filter(v=>!isDnf(v)).map(effective);
-  $('count').textContent=solves.length;$('best').textContent=valid.length?fmt(Math.min(...valid)):'—';$('mean').textContent=valid.length?fmt(valid.reduce((a,b)=>a+b,0)/valid.length):'—';
+  h.classList.toggle('expanded',timesExpanded);
+  const tog=$('historyToggle');tog.hidden=solves.length<=RECENT_COUNT;tog.textContent=timesExpanded?'Show less':'Show all';tog.setAttribute('aria-expanded',String(timesExpanded));
 }
+$('historyToggle').addEventListener('click',()=>{timesExpanded=!timesExpanded;render();if(!timesExpanded)$('history').scrollTop=0});
 function close(){document.querySelectorAll('.drawer').forEach(x=>x.classList.remove('open'));$('scrim').classList.remove('open');setTimeout(()=>{if(!drawersOpen())resetAdvanced()},300);if(document.activeElement&&document.activeElement.matches('button,input,select,textarea'))document.activeElement.blur();}
 function open(which){close();resetAdvanced();$(which).classList.add('open');$('scrim').classList.add('open')}
 function resetAdvanced(){document.querySelectorAll('#advanced .sub').forEach(x=>x.classList.remove('open'));$('lucentAdvMain').classList.remove('pushed')}
