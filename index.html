@@ -13,7 +13,20 @@
 <main id="screen">
   <div id="scramblePanel">
     <div id="scramble" aria-live="polite">Generating scramble…</div>
-    <button id="newScramble" type="button">New scramble</button>
+    <div id="scrambleActions" class="scrambleActions">
+      <button id="newScramble" type="button">New scramble</button>
+      <button id="scrambleGear" class="gearBtn" type="button" aria-label="Scramble settings" aria-haspopup="dialog" aria-expanded="false" aria-controls="scramblePop"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+      <div id="scramblePop" class="scramblePop" role="dialog" aria-label="Scramble settings" data-ui-control hidden>
+        <div class="popLabel">Scramble length</div>
+        <div class="lenRow">
+          <button id="scrambleLenDown" class="stepBtn" type="button" aria-label="Decrease scramble length">−</button>
+          <input id="scrambleLengthQuick" type="number" inputmode="numeric" min="1" max="200" step="1" placeholder="Auto" aria-label="Scramble length in moves">
+          <button id="scrambleLenUp" class="stepBtn" type="button" aria-label="Increase scramble length">+</button>
+          <button id="scrambleAuto" class="autoBtn" type="button" aria-pressed="true">Auto</button>
+        </div>
+        <p class="popHint">Auto uses official scrambles. A number uses that many random moves.</p>
+      </div>
+    </div>
   </div>
   <div id="timerStack">
     <div id="status" aria-live="polite"></div>
@@ -24,8 +37,8 @@
 <div id="glow" aria-hidden="true"></div>
 <div id="swipeLine" aria-hidden="true"><span id="swipeLabel">+2</span></div>
 <div id="scrim"></div>
-<aside id="quick" class="drawer right">
-  <header><div><small>LUCENTTIMER</small><h1>Quick settings</h1></div><button data-close aria-label="Close">×</button></header>
+<aside id="quick" class="drawer right" aria-label="Quick access">
+  <header><div><small>LUCENTTIMER</small></div><button data-close aria-label="Close">×</button></header>
   <section id="sessionOverview">
     <div class="stats"><div><small>Ao5</small><b id="ao5">—</b></div><div><small>Ao12</small><b id="ao12">—</b></div></div>
     <ol id="history"><li class="empty">Your solves will appear here.</li></ol>
@@ -38,7 +51,7 @@
 </aside>
 <aside id="advanced" class="drawer left">
   <div class="lt-adv-page" id="lucentAdvMain">
-    <header><div><small>LUCENTTIMER</small><h1>Advanced</h1></div><button data-close aria-label="Close">×</button></header>
+    <header><div><small>LUCENTTIMER</small><h1>Settings</h1></div><button data-close aria-label="Close">×</button></header>
     <section class="platform-setting">
       <label>Platform mode<select id="platformMode"><option value="auto">Auto (recommended)</option><option value="mobile">Mobile</option><option value="desktop">Desktop</option></select></label>
       <p class="hint">Auto adapts gestures to this device. Choose Mobile or Desktop to override.</p>

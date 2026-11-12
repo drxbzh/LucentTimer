@@ -44,6 +44,7 @@ function render(){
   $('timerFont').value=settings.timerFont;$('timerWeight').value=settings.timerWeight;$('time').dataset.font=settings.timerFont;$('time').dataset.weight=settings.timerWeight;
   $('startMethod').value=settings.startMethod;$('inspectionEnabled').checked=settings.inspectionEnabled;$('inspectionLength').value=settings.inspectionLength;$('precision').value=settings.precision;
   $('leadingZero').checked=settings.leadingZero;$('theme').value=settings.theme;$('keepAwake').checked=settings.keepAwake;$('soundEnabled').checked=settings.soundEnabled;$('vibrationEnabled').checked=settings.vibrationEnabled;$('scrambleLength').value=settings.scrambleLength||'';
+  const sl=Math.floor(+settings.scrambleLength)||0;$('scrambleLengthQuick').value=sl||'';$('scrambleAuto').classList.toggle('active',!sl);$('scrambleAuto').setAttribute('aria-pressed',String(!sl));$('scrambleLenDown').disabled=sl>0&&sl<=1;$('scrambleLenUp').disabled=sl>=200;
   // Session overview: Ao5 / Ao12 plus recorded times (newest first; 5 by default, all when expanded).
   $('ao5').textContent=fmtAo(averageOf(5));$('ao12').textContent=fmtAo(averageOf(12));
   const h=$('history');h.innerHTML='';
@@ -54,7 +55,7 @@ function render(){
 }
 $('historyToggle').addEventListener('click',()=>{timesExpanded=!timesExpanded;render();if(!timesExpanded)$('history').scrollTop=0});
 function close(){document.querySelectorAll('.drawer').forEach(x=>x.classList.remove('open'));$('scrim').classList.remove('open');setTimeout(()=>{if(!drawersOpen())resetAdvanced()},300);if(document.activeElement&&document.activeElement.matches('button,input,select,textarea'))document.activeElement.blur();}
-function open(which){close();resetAdvanced();$(which).classList.add('open');$('scrim').classList.add('open')}
+function open(which){closeScramblePop();close();resetAdvanced();$(which).classList.add('open');$('scrim').classList.add('open')}
 function resetAdvanced(){document.querySelectorAll('#advanced .sub').forEach(x=>x.classList.remove('open'));$('lucentAdvMain').classList.remove('pushed')}
 function goBack(){const s=document.querySelector('#advanced .sub.open');if(!s)return false;s.classList.remove('open');$('lucentAdvMain').classList.remove('pushed');return true}
 document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{$(b.dataset.go).classList.add('open');$('lucentAdvMain').classList.add('pushed')});
@@ -145,6 +146,7 @@ function pressStart(source,e){
   if(press)return;
   const allowed=source==='key'||settings.startMethod!=='keyboard';
   const holdMode=source==='key' ? true : settings.startMethod==='hold';
+  if(source==='key'||settings.startMethod!=='keyboard')closeScramblePop();
   press={source,id:e?.pointerId,x:e?.clientX,y:e?.clientY,moved:false,armed:false,allowed,holdMode,timer:0,vertical:false,ticked:false,committed:false};
   setPressed(true);
   if(allowed&&(state==='inspection'||!settings.inspectionEnabled))setScrambleHidden(true);
@@ -158,6 +160,11 @@ function pressEnd(cancel){
   if(go){if(state==='inspection'){cancelAnimationFrame(raf);run()}else begin()}
 }
 
+document.addEventListener('pointerdown',e=>{
+  if(!scramblePopOpen()||e.target.closest('#scrambleActions'))return;
+  closeScramblePop();
+  if(!interactiveTarget(e.target)){e.preventDefault();e.stopImmediatePropagation()}
+},true);
 document.addEventListener('pointerdown',e=>{
   if(effectivePlatformMode()!=='desktop'||e.pointerType==='touch'||e.button!==0)return;
   // Mouse clicks only open the drawers when idle: never while solving, over a button, or during delete confirmation.
@@ -203,6 +210,7 @@ function interactiveTarget(target){return !!target.closest('button,input,select,
 const modifierKeys=new Set(['Shift','Control','Alt','Meta','CapsLock','Fn','OS']);
 const typing=t=>t.matches('input,select,textarea,[contenteditable="true"]');
 document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&scramblePopOpen()&&!confirmOpen()){e.preventDefault();closeScramblePop();if(document.activeElement)document.activeElement.blur();return}
   if(e.key==='Escape'&&drawersOpen()&&!confirmOpen()){e.preventDefault();if(document.activeElement)document.activeElement.blur();if(!goBack())close();return}
   if(typing(e.target)||modifierKeys.has(e.key)||e.repeat)return;
   const k=e.key.length===1?e.key.toLowerCase():e.key,plain=!(e.ctrlKey||e.metaKey||e.altKey);
@@ -239,9 +247,14 @@ function randomMoveScramble(n){
   }
   return out.join(' ');
 }
+function scrambleOptions(){return{length:Math.min(Math.floor(+settings.scrambleLength)||0,200)}}
+function setScrambleLength(raw){const n=Math.floor(+raw);settings.scrambleLength=Number.isFinite(n)&&n>=1?Math.min(n,200):0;save();render();generateScramble()}
+const scramblePopOpen=()=>!$('scramblePop').hidden;
+function setScramblePop(on){$('scramblePop').hidden=!on;$('scrambleGear').setAttribute('aria-expanded',String(!!on));$('scrambleGear').classList.toggle('active',!!on)}
+function closeScramblePop(){if(scramblePopOpen())setScramblePop(false)}
 function showScramble(text){currentScramble=text;$('scramble').textContent=text;$('scramble').classList.remove('scramble-error')}
 async function generateScramble(){
-  const custom=Math.floor(+settings.scrambleLength)||0;
+  const custom=scrambleOptions().length;
   if(custom>0){showScramble(randomMoveScramble(Math.min(custom,200)));return}
   if(scrambleBusy)return;scrambleBusy=true;$('newScramble').disabled=true;$('scramble').textContent='Generating scramble…';
   try{scrambleModule ||= await import('https://cdn.cubing.net/v0/js/cubing/scramble');const alg=await scrambleModule.randomScrambleForEvent('333');showScramble(alg.toString())}
@@ -255,7 +268,16 @@ $('timerSize').addEventListener('input',e=>{settings.timerSize=+e.target.value;$
 $('timerFont').addEventListener('change',e=>{settings.timerFont=e.target.value;save();render();});
 $('timerWeight').addEventListener('change',e=>{settings.timerWeight=e.target.value;save();render();});
 bind('startMethod','startMethod');bind('inspectionEnabled','inspectionEnabled',Boolean);bind('precision','precision',Number);bind('theme','theme');bind('leadingZero','leadingZero',Boolean);bind('soundEnabled','soundEnabled',Boolean);bind('vibrationEnabled','vibrationEnabled',Boolean);bind('keepAwake','keepAwake',Boolean);
-$('scrambleLength').addEventListener('change',e=>{const n=Math.floor(+e.target.value);settings.scrambleLength=Number.isFinite(n)&&n>=1?Math.min(n,200):0;save();render();generateScramble()});
+// Scramble settings: one place that reads/writes options, so the gear popover and Settings stay in sync.
+// New options (e.g. a puzzle type later) belong in scrambleOptions() and the popover markup.
+$('scrambleLength').addEventListener('change',e=>setScrambleLength(e.target.value));
+$('scrambleLengthQuick').addEventListener('change',e=>setScrambleLength(e.target.value));
+$('scrambleLengthQuick').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();e.target.blur()}});
+const stepScrambleLength=d=>{const cur=Math.floor(+settings.scrambleLength)||0;setScrambleLength(cur?Math.max(1,Math.min(200,cur+d)):20)};
+$('scrambleLenDown').addEventListener('click',()=>stepScrambleLength(-1));
+$('scrambleLenUp').addEventListener('click',()=>stepScrambleLength(1));
+$('scrambleAuto').addEventListener('click',()=>setScrambleLength(0));
+$('scrambleGear').addEventListener('click',()=>{setScramblePop(!scramblePopOpen());$('scrambleGear').blur()});
 $('inspectionLength').onchange=e=>{settings.inspectionLength=+e.target.value;save();render()};
 $('clear').onclick=()=>{if(confirm('Clear all saved solves?')){solves=[];saveSolves();resultShown=false;show(0);setStatus('');render()}};
 async function applyWake(){

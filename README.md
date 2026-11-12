@@ -14,9 +14,9 @@ Upload the project folder to your existing HTTPS static host. For an existing Ne
 - **Inspection:** Counts down in whole seconds. Start the solve with the same gesture as above. Starting after the countdown gives +2 (up to 2 s over) or DNF.
 - While the timer is running, a screen press also stops immediately.
 - The scramble disappears the moment you press to start the solve and returns when the timer stops.
-- Swipe left for Quick Settings; swipe right for Advanced. Advanced is a list of pages (Timer, Scramble, Display, Feedback, Data, About); tap one to open it, and use the back arrow or Esc to return.
+- Swipe left for Quick Settings; swipe right for Settings. Settings is a list of pages (Timer, Scramble, Display, Feedback, Data, About); tap one to open it, and use the back arrow or Esc to return.
 - **Swipe up** (after a solve) toggles +2 on that solve, with a green line and "+2" label. **Swipe down** shows a soft red glow and asks before deleting it.
-- **Desktop keys (when idle):** `Q` quick settings, `A` advanced, `N` new scramble, `2` toggles +2 on the last solve, `Backspace`/`Delete` deletes it (Enter/Y confirms, Esc/N cancels), `Esc` closes a drawer.
+- **Desktop keys (when idle):** `Q` quick settings, `A` settings, `N` new scramble, `2` toggles +2 on the last solve, `Backspace`/`Delete` deletes it (Enter/Y confirms, Esc/N cancels), `Esc` closes a drawer.
 - The layout adapts to portrait and landscape (no in-app orientation lock; it follows the phone's own rotation setting).
 - Press feedback instantly changes the timer font to 90% of its configured size.
 
@@ -24,7 +24,7 @@ Upload the project folder to your existing HTTPS static host. For an existing Ne
 
 - Main-display inspection countdown with brief audio/haptic warnings.
 - Optional vibration and audio cues.
-- 3x3 random-state scrambles (or a custom length from 1 to 200 random moves, set in Advanced; custom lengths work offline), manual refresh, and scramble saved with each solve.
+- 3x3 random-state scrambles (or a custom length from 1 to 200 random moves, set in Settings; custom lengths work offline), manual refresh, and scramble saved with each solve.
 - Recent solves, best, mean, dark/light appearance, precision, and screen wake lock (on by default).
 
 ## Scramble connectivity
