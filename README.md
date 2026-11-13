@@ -14,9 +14,9 @@ Upload the project folder to your existing HTTPS static host. For an existing Ne
 - **Inspection:** Counts down in whole seconds. Start the solve with the same gesture as above. Starting after the countdown gives +2 (up to 2 s over) or DNF.
 - While the timer is running, a screen press also stops immediately.
 - The scramble disappears the moment you press to start the solve and returns when the timer stops.
-- Swipe left for Quick Settings; swipe right for Settings. Settings is a list of pages (Timer, Scramble, Display, Feedback, Data, About); tap one to open it, and use the back arrow or Esc to return.
+- Swipe left shows the Solve Overview tab; swipe right opens Settings. Settings is a list of pages (Timer, Scramble, Display, Feedback, Data, About); tap one to open it, and use the back arrow or Esc to return.
 - **Swipe up** (after a solve) toggles +2 on that solve, with a green line and "+2" label. **Swipe down** shows a soft red glow and asks before deleting it.
-- **Desktop keys (when idle):** `Q` quick settings, `A` settings, `N` new scramble, `2` toggles +2 on the last solve, `Backspace`/`Delete` deletes it (Enter/Y confirms, Esc/N cancels), `Esc` closes a drawer.
+- **Desktop keys (when idle):** `Q` shows/hides the Solve Overview tab, `A` settings, `N` new scramble, `2` toggles +2 on the last solve, `Backspace`/`Delete` deletes it (Enter/Y confirms, Esc/N cancels), `Esc` closes a drawer.
 - The layout adapts to portrait and landscape (no in-app orientation lock; it follows the phone's own rotation setting).
 - Press feedback instantly changes the timer font to 90% of its configured size.
 
@@ -46,3 +46,13 @@ The 3x3 scrambler uses `cubing.js` from `cdn.cubing.net` to generate random-stat
 ## Local development
 
 Serve this folder over `http://localhost` (for example, `python -m http.server 8000`). The scramble generator will not work from a `file://` URL.
+
+## Interface (v0.10)
+
+- **Interface Type** (Settings > Display): Solid (default, bordered blocks), Soft (blocks, no borders), Glass (neutral translucent panels with backdrop blur, solid accent buttons), Minimal (no blocks or borders; the Solve Overview keeps the Soft look). The old Borders toggle was replaced by Solid/Soft.
+- **Interface Style** controls shape only: Sharp, Soft, Rounded, Hybrid (circular icon-only controls, Soft rounded rectangles for text buttons), Minimal. Type, Style and GUI Colours are independent.
+- GUI colour presets: Midnight (default) and Obsidian (pure black, white text), plus Arctic, Ember, Forest.
+- **Timer Effect** (None / Glow / Shadow) applies to the timer digits only and is separate from the button Glow in Visual Effects.
+- **Left dock**: gear (opens Settings), shortcuts (Start method and Inspection by default) and a + button to add, remove and reorder shortcuts (up to 8). Hidden while a solve is running.
+- **Solve Overview** is a floating tab on the right edge (Ao5/Ao12, recent solves, Start method, Inspection). Tap its chevron, press Q or swipe left to open/collapse it. On narrow screens it starts collapsed.
+- **Android PWA**: the manifest uses `display: fullscreen` (with a `standalone` fallback) so the installed app launches in immersive fullscreen. Reinstall the PWA, or wait for Chrome to update the WebAPK, for the manifest change to take effect. In the browser, use the browser's own fullscreen.

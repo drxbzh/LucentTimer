@@ -22,12 +22,11 @@
   /* Timer zone: timer background and the text/controls that sit on it. Independent from the GUI colours above. */
   --timer-bg:#101116;--t-text:#f4f4f7;--t-muted:#9295a3;--t-line:#30333e;--t-fill:rgba(255,255,255,.07);--t-fill2:rgba(255,255,255,.14);--t-shadow:transparent;
   /* Interface style tokens (default = "Rounded", the original look). Presets are in appearance.css. */
-  --r-btn:999px;--r-ctl:9px;--r-card:14px;--r-chk:6px;--drawer-shadow:0 0 50px #0003}
+  --r-btn:999px;--r-ctl:9px;--r-card:14px;--r-chk:6px;--r-icon:999px;--drawer-shadow:0 0 50px #0003;--float-shadow:0 4px 18px rgba(0,0,0,.28)}
 body.light{--panel:#fff;--text:#18191f;--muted:#6f7280;--line:#dedfe5;--accent:#477d0b;--field:#f5f5f7;--field2:#e4e5ea;--accent-soft:rgba(71,125,11,.16);--on-accent:#fff;
   --timer-bg:#f5f5f7;--t-text:#18191f;--t-muted:#6f7280;--t-line:#dedfe5;--t-fill:rgba(0,0,0,.05);--t-fill2:rgba(0,0,0,.1)}
-/* Derived tokens live on <body> so they resolve against the final (light/dark/custom) values. Borders are OFF by default. */
+/* Derived tokens live on <body> so they resolve against the final (light/dark/custom) values. These are the Soft defaults; appearance.css overrides them per Interface Type. */
 body{--bc:transparent;--t-bc:transparent;--bc-danger:transparent;--ctl-bg:var(--field);--card-bg:var(--field);--btn-fill:var(--t-fill)}
-body[data-borders="on"]{--bc:var(--line);--t-bc:var(--t-line);--bc-danger:#ff5a5a}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--timer-bg);color:var(--text);font-family:system-ui,-apple-system,sans-serif;overscroll-behavior:none}
 #screen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--timer-bg);color:var(--t-text);touch-action:none;user-select:none}
 /* Optional timer background image + overlay (driven by appearance.js). Sit behind all timer content. */
@@ -37,7 +36,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--timer
 #time{font-size:1em;font-weight:var(--timer-weight,300);letter-spacing:-.065em;font-variant-numeric:tabular-nums;white-space:nowrap;line-height:1;user-select:none}
 /* The pressed state is deliberately instantaneous: no transition or easing. */
 #time.pressed{font-size:.9em}
-#time.ready{color:var(--accent)}
+#time.ready{color:var(--ready,var(--accent))}
 #status{min-height:1em;color:var(--t-muted);font-size:.72rem;font-weight:700;letter-spacing:.2em;opacity:0;visibility:hidden}
 #status.visible{opacity:1;visibility:visible}
 #scramblePanel{position:absolute;top:max(5vh,calc(env(safe-area-inset-top) + 18px));left:50%;transform:translateX(-50%);width:min(900px,92vw);display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
@@ -60,12 +59,11 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--timer
 .stepBtn:disabled{opacity:.4;cursor:default}
 .autoBtn{margin-left:auto;height:36px;padding:0 14px;font-size:.8rem;color:var(--muted)}
 .autoBtn.active{background:var(--accent-soft);color:var(--accent)}
-body[data-borders="on"] .autoBtn.active{border-color:var(--accent)}
+[data-ui-type="solid"] .autoBtn.active{border-color:var(--accent)}
 .popHint{margin:10px 0 0;font-size:.72rem;line-height:1.5;color:var(--muted)}
 #scrim{position:fixed;inset:0;background:#0006;z-index:4;opacity:0;visibility:hidden;transition:.2s}
 #scrim.open{opacity:1;visibility:visible}
 .drawer{position:fixed;z-index:5;top:0;bottom:0;width:var(--w);background:var(--panel);padding:calc(22px + env(safe-area-inset-top)) 22px calc(22px + env(safe-area-inset-bottom));overflow:auto;transition:transform .23s;box-shadow:var(--drawer-shadow)}
-.right{right:0;transform:translateX(105%);border-left:1px solid var(--bc)}
 .left{left:0;transform:translateX(-105%);border-right:1px solid var(--bc)}
 .drawer.open{transform:translateX(0)}
 header{display:flex;justify-content:space-between;margin-bottom:28px}
@@ -137,7 +135,6 @@ nav{border-top:1px solid var(--line)}
 
 /* Notch / rounded-corner safe areas when the phone is rotated */
 .lt-adv-page{padding-left:calc(22px + env(safe-area-inset-left))}
-.drawer.right{padding-right:calc(22px + env(safe-area-inset-right))}
 #scramblePanel{width:min(900px,calc(100vw - 2 * max(4vw,env(safe-area-inset-left),env(safe-area-inset-right))))}
 
 /* Timer-only typography controls */

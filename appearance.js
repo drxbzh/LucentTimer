@@ -10,10 +10,19 @@ export const STYLES = [
   { id: 'sharp',   name: 'Sharp',   desc: 'Square corners and crisp edges.' },
   { id: 'soft',    name: 'Soft',    desc: 'Slightly softened corners.' },
   { id: 'rounded', name: 'Rounded', desc: 'More pronounced rounded corners.' },
-  { id: 'hybrid',  name: 'Hybrid',  desc: 'Round buttons on square panels and fields.' },
-  { id: 'minimal', name: 'Minimal', desc: 'Understated, flat and clean.' },
+  { id: 'hybrid',  name: 'Hybrid',  desc: 'Round icon buttons, soft rounded rectangles elsewhere.' },
+  { id: 'minimal', name: 'Minimal', desc: 'Compact, understated corners.' },
 ];
 const STYLE_IDS = STYLES.map(s => s.id);
+
+// Interface Types: how surfaces are drawn (fill, borders, blur). Independent of Styles (shape) and GUI Colours.
+export const TYPES = [
+  { id: 'solid',   name: 'Solid',   desc: 'Filled blocks with visible borders.' },
+  { id: 'soft',    name: 'Soft',    desc: 'Filled blocks without borders.' },
+  { id: 'glass',   name: 'Glass',   desc: 'Neutral translucent surfaces with a soft blur.' },
+  { id: 'minimal', name: 'Minimal', desc: 'No blocks or borders. Solve Overview keeps its Soft look.' },
+];
+const TYPE_IDS = TYPES.map(t => t.id);
 
 // Default GUI colours (must match the CSS defaults in styles.css).
 const DEF = {
@@ -24,6 +33,7 @@ const DEF = {
 // Curated starting points (not locked themes). Each defines both modes; the user can edit any colour afterwards.
 export const PRESETS = [
   { id: 'midnight', name: 'Midnight', dark: { accent: '#7aa2ff', surface: '#151a2e' }, light: { accent: '#3b5bdb', surface: '#f2f4fb' } },
+  { id: 'obsidian', name: 'Obsidian', dark: { accent: '#ffffff', surface: '#000000', text: '#ffffff' }, light: { accent: '#000000', surface: '#ffffff', text: '#000000' } },
   { id: 'arctic',   name: 'Arctic',   dark: { accent: '#5cd6ff', surface: '#13232b' }, light: { accent: '#0a7ea4', surface: '#f0f8fb' } },
   { id: 'ember',    name: 'Ember',    dark: { accent: '#ff8a3d', surface: '#261813' }, light: { accent: '#c2410c', surface: '#fff5ef' } },
   { id: 'forest',   name: 'Forest',   dark: { accent: '#5fd68a', surface: '#14231a' }, light: { accent: '#1f7a3f', surface: '#f1f8f3' } },
@@ -38,9 +48,10 @@ const POSITIONS = ['left top', 'center top', 'right top', 'left center', 'center
 const POS_LABELS = ['Top left', 'Top', 'Top right', 'Left', 'Centre', 'Right', 'Bottom left', 'Bottom', 'Bottom right'];
 
 export const APPEARANCE_DEFAULTS = {
-  uiStyle: 'rounded',                       // Interface Style (default equals the original look)
-  guiColors: { dark: null, light: null },   // null = built-in colours; else {accent, surface} per mode
-  borders: false,                           // Borders OFF by default
+  uiType: 'solid',                          // Interface Type (Solid is the default)
+  uiStyle: 'rounded',                       // Interface Style (shape only)
+  guiColors: { dark: { ...PRESETS[0].dark }, light: { ...PRESETS[0].light } },   // Midnight is the default preset; {accent, surface, text?} per mode
+  timerEffect: 'none',                      // none | glow | shadow (timer digits only)
   glowLevel: 0,                             // dark mode glow, 0..4 (Off..Intense)
   shadowEnabled: false,                     // light mode shadows
   shadowIntensity: 40,                      // 5..100
@@ -76,13 +87,13 @@ function hsv2rgb(h, s, v) {
 }
 
 // GUI palette derived from an accent + surface colour.
-function derivePalette(accent, surface) {
+function derivePalette(accent, surface, textOverride) {
   const darkSurface = lum(surface) < .4;
-  const text = darkSurface ? '#f4f4f7' : '#18191f';
+  const text = textOverride || (darkSurface ? '#f4f4f7' : '#18191f');
   return {
     '--panel': surface, '--text': text,
     '--muted': mix(surface, text, .55), '--line': mix(surface, text, .12),
-    '--field': mix(surface, '#000000', darkSurface ? .35 : .04),
+    '--field': lum(surface) < .01 ? mix(surface, text, .08) : mix(surface, '#000000', darkSurface ? .35 : .04),   // pure black can't go darker, so lift it slightly
     '--field2': mix(surface, text, .14),
     '--accent': accent, '--accent-soft': rgba(accent, .2), '--on-accent': onColor(accent),
   };
@@ -106,11 +117,15 @@ const pick = (v, list, d) => list.includes(v) ? v : d;
 // Coerce stored values into valid ones; anything missing or corrupt falls back to the defaults.
 export function sanitize(s) {
   const D = APPEARANCE_DEFAULTS;
+  s.uiType = pick(s.uiType, TYPE_IDS, D.uiType);   // the old Borders toggle is replaced by Interface Type (Solid = borders, Soft = none)
+  delete s.borders;
   s.uiStyle = pick(s.uiStyle, STYLE_IDS, D.uiStyle);
-  s.borders = s.borders === true;
+  s.timerEffect = pick(s.timerEffect, ['none', 'glow', 'shadow'], D.timerEffect);
   const gc = s.guiColors && typeof s.guiColors === 'object' ? s.guiColors : {};
-  const clean = o => { if (!o || typeof o !== 'object') return null; const a = normHex(o.accent), b = normHex(o.surface); return a && b ? { accent: a, surface: b } : null; };
-  s.guiColors = { dark: clean(gc.dark), light: clean(gc.light) };
+  // Never-customised (null/missing/corrupt) colours fall back to the default preset, Midnight.
+  const clean = (o, d) => { if (!o || typeof o !== 'object') return { ...d }; const a = normHex(o.accent), b = normHex(o.surface), t = normHex(o.text); return a && b ? (t ? { accent: a, surface: b, text: t } : { accent: a, surface: b }) : { ...d }; };
+  s.guiColors = { dark: clean(gc.dark, D.guiColors.dark), light: clean(gc.light, D.guiColors.light) };
+  s.overviewOpen = typeof s.overviewOpen === 'boolean' ? s.overviewOpen : null;
   s.glowLevel = clampInt(s.glowLevel, 0, 4, D.glowLevel);
   s.shadowEnabled = s.shadowEnabled === true;
   s.shadowIntensity = clampInt(s.shadowIntensity, 5, 100, D.shadowIntensity);
@@ -275,14 +290,18 @@ export function initAppearance({ settings, save }) {
   // Apply every appearance setting to the page. Cheap and idempotent; called on any change and when the theme flips.
   function apply() {
     const m = mode(), vars = {};
+    body.dataset.uiType = settings.uiType;
     body.dataset.uiStyle = settings.uiStyle;
-    body.dataset.borders = settings.borders ? 'on' : 'off';
+    if (settings.timerEffect === 'none') delete body.dataset.timerFx; else body.dataset.timerFx = settings.timerEffect;
     const gc = settings.guiColors[m];
-    if (gc) Object.assign(vars, derivePalette(gc.accent, gc.surface));
+    if (gc) Object.assign(vars, derivePalette(gc.accent, gc.surface, gc.text));
     const bg = bgModel();
     if (bg.kind === 'color') Object.assign(vars, timerPalette(bg.base));
     else if (bg.kind === 'image') Object.assign(vars, timerPalette(bg.base, bg.fg));
     const accent = gc ? gc.accent : DEF[m].accent, surface = gc ? gc.surface : DEF[m].surface;
+    // "Ready" colour of the timer digits: the accent, unless the accent is too close to the digit colour to be seen (e.g. a white accent).
+    const tText = bg.kind === 'default' ? (m === 'dark' ? '#f4f4f7' : '#18191f') : (vars['--t-text'] || '#f4f4f7');
+    vars['--ready'] = Math.abs(lum(accent) - lum(tText)) < .22 ? (lum(tText) > .4 ? '#b7f36b' : '#477d0b') : accent;
     const fx = fxVars(accent, surface);
     if (fx) { vars['--fx-shadow'] = fx; body.dataset.fx = m === 'dark' ? 'glow' : 'shadow'; } else delete body.dataset.fx;
     setVars(vars);
@@ -294,15 +313,19 @@ export function initAppearance({ settings, save }) {
 
   // ───── Settings UI ─────
   function build() {
-    // Interface style tiles
-    const tiles = $('styleTiles');
-    STYLES.forEach(st => {
-      const b = document.createElement('button');
-      b.type = 'button'; b.className = 'styleTile'; b.dataset.uiStyle = st.id; b.dataset.id = st.id; b.setAttribute('role', 'radio');
-      b.innerHTML = `<span class="sample" aria-hidden="true"><i class="sb"></i><i class="sc"></i></span><span class="st-text"><b>${st.name}</b><small>${st.desc}</small></span>`;
-      b.onclick = () => { settings.uiStyle = st.id; save(); apply(); refresh(); };
-      tiles.append(b);
-    });
+    // Interface type + style tiles
+    const makeTiles = (hostId, list, attr, key) => {
+      const host = $(hostId);
+      list.forEach(it => {
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'styleTile ' + (attr === 'uiType' ? 'typeTile' : ''); b.dataset[attr] = it.id; b.dataset.id = it.id; b.setAttribute('role', 'radio');
+        b.innerHTML = `<span class="sample" aria-hidden="true"><i class="sb"></i><i class="si"></i><i class="sc"></i></span><span class="st-text"><b>${it.name}</b><small>${it.desc}</small></span>`;
+        b.onclick = () => set(key, it.id);
+        host.append(b);
+      });
+    };
+    makeTiles('typeTiles', TYPES, 'uiType', 'uiType');
+    makeTiles('styleTiles', STYLES, 'uiStyle', 'uiStyle');
     // Colour presets
     const chips = $('presetChips');
     PRESETS.forEach(p => {
@@ -315,13 +338,13 @@ export function initAppearance({ settings, save }) {
     // GUI picker (Accent / Surface target switch)
     ui = {};
     ui.gui = createColorPicker($('guiPicker'), {
-      onInput: hex => { const m = mode(); settings.guiColors[m] = { ...curGui(), [guiTarget]: hex }; apply(); refreshChips(); },
+      onInput: hex => { const m = mode(), next = { ...curGui(), [guiTarget]: hex }; if (guiTarget === 'surface') delete next.text; settings.guiColors[m] = next; apply(); refreshChips(); },   // a new surface colour drops a preset's fixed text colour
       onCommit: () => save(),
     });
     $('guiTarget').querySelectorAll('button').forEach(b => b.onclick = () => { guiTarget = b.dataset.t; refresh(); });
-    $('guiReset').onclick = () => { settings.guiColors = { dark: null, light: null }; save(); apply(); refresh(); };
-    // Borders
-    $('bordersToggle').onchange = e => { settings.borders = e.target.checked; save(); apply(); };
+    $('guiReset').onclick = () => { settings.guiColors = { dark: { ...APPEARANCE_DEFAULTS.guiColors.dark }, light: { ...APPEARANCE_DEFAULTS.guiColors.light } }; save(); apply(); refresh(); };
+    // Timer Effect (timer digits only; independent of the button glow below)
+    $('timerEffect').onchange = e => set('timerEffect', e.target.value);
     // Effects
     const gs = $('glowSeg');
     GLOW_LEVELS.forEach((g, i) => {
@@ -373,7 +396,6 @@ export function initAppearance({ settings, save }) {
     if (live) { img.style.backgroundImage = `url("${bgUrl}")`; img.style.backgroundSize = FITS[settings.bgFit]; img.style.backgroundPosition = settings.bgFit === 'stretch' ? 'center' : settings.bgPos; }
     ov.style.display = live && bg.overlay ? 'block' : 'none';
     if (live && bg.overlay) { ov.style.background = bg.overlay.color; ov.style.opacity = String(bg.overlay.a); }
-    p.querySelector('.bgp-time').style.textShadow = live ? '0 0 14px var(--t-shadow)' : 'none';
   }
 
   function refreshChips() {
@@ -381,16 +403,17 @@ export function initAppearance({ settings, save }) {
     $('presetChips').querySelectorAll('.chip').forEach(b => {
       const p = PRESETS.find(x => x.id === b.dataset.id), v = p[mode()];
       b.querySelector('.sw').style.background = `linear-gradient(135deg,${v.accent} 0 50%,${v.surface} 50% 100%)`;
-      b.setAttribute('aria-checked', String(!!cur && cur.accent === v.accent && cur.surface === v.surface));
+      b.setAttribute('aria-checked', String(!!cur && cur.accent === v.accent && cur.surface === v.surface && (cur.text || '') === (v.text || '')));
     });
   }
   function refresh() {
+    $('typeTiles').querySelectorAll('.styleTile').forEach(b => b.setAttribute('aria-checked', String(b.dataset.id === settings.uiType)));
     $('styleTiles').querySelectorAll('.styleTile').forEach(b => b.setAttribute('aria-checked', String(b.dataset.id === settings.uiStyle)));
+    $('timerEffect').value = settings.timerEffect;
     refreshChips();
     $('guiTarget').querySelectorAll('button').forEach(b => b.setAttribute('aria-checked', String(b.dataset.t === guiTarget)));
     ui.gui.set(curGui()[guiTarget]);
     $('guiHint').textContent = `Editing ${mode()} mode colours. Switch Appearance to ${mode() === 'dark' ? 'Light' : 'Dark'} to edit those. Presets set both modes.`;
-    $('bordersToggle').checked = settings.borders;
     const dark = mode() === 'dark';
     $('fxDark').hidden = !dark; $('fxLight').hidden = dark;
     $('glowSeg').querySelectorAll('button').forEach(b => b.setAttribute('aria-checked', String(+b.dataset.level === settings.glowLevel)));
@@ -445,10 +468,19 @@ export function initAppearance({ settings, save }) {
     apply(); refresh();
   }
 
+  // Programmatic setter used by the tiles and by the dock shortcuts. Same validation as stored values.
+  function set(key, value) {
+    if (key === 'uiType') settings.uiType = pick(value, TYPE_IDS, settings.uiType);
+    else if (key === 'uiStyle') settings.uiStyle = pick(value, STYLE_IDS, settings.uiStyle);
+    else if (key === 'timerEffect') settings.timerEffect = pick(value, ['none', 'glow', 'shadow'], settings.timerEffect);
+    else return;
+    save(); apply(); refresh();
+  }
+
   build();
   apply(); refresh();
   loadStoredImage();
   window.addEventListener('resize', () => { if ($('advDisplay').classList.contains('open')) renderPreview(); });
   // Called by app.js after every render(): keeps appearance in sync with theme changes.
-  return { sync() { apply(); refresh(); } };
+  return { sync() { apply(); refresh(); }, set };
 }

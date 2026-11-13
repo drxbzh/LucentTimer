@@ -1,0 +1,87 @@
+/* Left quick-access dock, dock pop-ups and the right-edge Solve Overview tab.
+   Structure and sizing live here. Fill / border / blur come from the Interface Type tokens (appearance.css),
+   corner shapes from the Interface Style tokens (--r-card, --r-icon, ...). GUI colours drive everything. */
+
+/* Hidden while a solve is running so a tap anywhere stops the timer */
+body.is-running #dock,body.is-running #overview,body.is-running #dockPop{opacity:0;visibility:hidden;pointer-events:none}
+
+/* ---------- Dock ---------- */
+#dock{--fg:var(--muted);--fg-hi:var(--text);--dot:var(--accent);
+  position:fixed;z-index:2;left:calc(10px + env(safe-area-inset-left));top:50%;transform:translateY(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px;max-height:calc(100dvh - 24px);
+  background:var(--panel);color:var(--fg);border:1px solid var(--bc);border-radius:var(--r-card);box-shadow:var(--float-shadow);
+  -webkit-user-select:none;user-select:none;touch-action:manipulation}
+.dockItems{display:flex;flex-direction:column;align-items:center;gap:3px;min-height:0;overflow-y:auto;scrollbar-width:none}
+.dockItems::-webkit-scrollbar{display:none}
+.dockSep{flex:none;width:16px;height:1px;background:var(--line)}
+.dockBtn{position:relative;flex:none;display:grid;place-items:center;width:34px;height:34px;padding:0;border:0;border-radius:var(--r-icon);background:var(--ctl-bg);color:var(--fg);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.dockBtn:hover,.dockBtn:focus-visible{color:var(--fg-hi)}
+.dockBtn:focus-visible,.popOpt:focus-visible,.miniBtn:focus-visible,.ovHead:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.dockBtn[aria-pressed="true"],.dockBtn[aria-expanded="true"]{background:var(--accent-soft);color:var(--accent)}
+
+/* ---------- Dock pop-up (select options, or the shortcut customiser) ---------- */
+#dockPop{position:fixed;z-index:3;left:60px;top:12px;width:max-content;min-width:184px;max-width:min(320px,calc(100vw - 84px));max-height:calc(100dvh - 24px);overflow:auto;padding:6px;
+  background:var(--panel);color:var(--text);border:1px solid var(--bc);border-radius:var(--r-card);box-shadow:var(--float-shadow);overscroll-behavior:contain}
+#dockPop[hidden]{display:none}
+.popHead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px 8px;font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.popOpt{display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;border:0;border-radius:var(--r-ctl);background:transparent;color:var(--text);font:inherit;font-size:.86rem;text-align:left;cursor:pointer}
+.popOpt:hover{background:var(--ctl-bg)}
+.popOpt[aria-checked="true"]{color:var(--accent);font-weight:600}
+.popOpt[aria-checked="true"]::after{content:"✓";margin-left:auto;padding-left:12px}
+.shortList{list-style:none;margin:0;padding:0;max-height:none;overflow:visible}
+.shortList li{display:flex;align-items:center;gap:8px;padding:4px 4px 4px 8px;border:0;font-size:.84rem}
+.shortList li>svg{flex:none;color:var(--muted)}
+.shortList li>span{flex:1;min-width:0}
+.shortList .none{color:var(--muted);font-size:.78rem;padding:6px 8px}
+.miniBtn{flex:none;display:grid;place-items:center;width:28px;height:28px;padding:0;border:0;border-radius:var(--r-icon);background:var(--ctl-bg);color:var(--muted);cursor:pointer}
+.miniBtn:hover:not(:disabled){color:var(--text)}
+.miniBtn:disabled{opacity:.35;cursor:default}
+.popNote{margin:4px 8px 6px;font-size:.72rem;line-height:1.5;color:var(--muted)}
+
+/* ---------- Solve Overview: a floating tab flush to the right edge ---------- */
+#overview{--ov-w:184px;
+  position:fixed;z-index:2;right:0;top:50%;transform:translateY(-50%);width:var(--ov-w);max-height:calc(100dvh - 2 * max(20px,env(safe-area-inset-top)));
+  display:flex;flex-direction:column;overflow:hidden;padding-right:env(safe-area-inset-right);
+  background:var(--panel);color:var(--text);border:1px solid var(--bc);border-right:0;
+  border-radius:calc(var(--r-card) * 1.25) 0 0 calc(var(--r-card) * 1.25);box-shadow:var(--float-shadow);-webkit-user-select:none;user-select:none}
+.ovHead{flex:none;display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;height:36px;padding:0 10px 0 14px;border:0;background:transparent;color:var(--muted);font:inherit;cursor:pointer}
+.ovTitle{font-size:.65rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase}
+.ovChev{flex:none;transition:transform .15s}
+.ovHead:hover{color:var(--text)}
+#overview[data-open="false"]{width:calc(26px + env(safe-area-inset-right))}
+#overview[data-open="false"] .ovHead{height:64px;padding:0 4px 0 0;justify-content:center}
+#overview[data-open="false"] .ovTitle,#overview[data-open="false"] .ovBody{display:none}
+#overview[data-open="false"] .ovChev{transform:rotate(180deg)}
+.ovBody{flex:1;min-height:0;display:flex;flex-direction:column;gap:8px;padding:0 10px 12px 12px;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y}
+#overview .stats{margin:0;gap:6px}
+#overview .stats div{padding:8px 8px 7px;gap:3px;min-width:0}
+#overview .stats b{font-size:1.1rem;white-space:nowrap}
+#overview .stats small{font-size:.6rem}
+#overview ol li{padding:6px 2px;font-size:.82rem}
+#overview #history.expanded{max-height:34vh}
+#overview .historyToggle{margin-top:0;padding:4px 0 2px;font-size:.74rem}
+.ovControls{display:flex;flex-direction:column;gap:2px;padding-top:6px;border-top:1px solid var(--line)}
+#overview label{padding:5px 0;font-size:.78rem}
+#overview label.stack{flex-direction:column;align-items:stretch;gap:5px}
+#overview select{width:100%;max-width:100%;padding:7px;font-size:.76rem}
+
+/* Minimal type: the dock floats icon-only on the timer background; the Solve Overview keeps the Soft background treatment. */
+body[data-ui-type="minimal"] #dock{--fg:var(--t-muted);--fg-hi:var(--t-text);background:transparent;border-color:transparent;box-shadow:none}
+body[data-ui-type="minimal"] .dockBtn{background:transparent}
+body[data-ui-type="minimal"] .dockBtn:hover{background:var(--t-fill)}
+body[data-ui-type="minimal"] .dockBtn[aria-pressed="true"],body[data-ui-type="minimal"] .dockBtn[aria-expanded="true"]{background:transparent}
+body[data-ui-type="minimal"] .dockSep{background:var(--t-line)}
+body[data-ui-type="minimal"] #dockPop{background:var(--panel);box-shadow:var(--float-shadow)}
+body[data-ui-type="minimal"] .miniBtn{background:transparent}
+body[data-ui-type="minimal"] #overview{--bc:transparent;--ctl-bg:var(--field);--card-bg:var(--field);--btn-fill:var(--t-fill);box-shadow:0 4px 18px rgba(0,0,0,.22)}
+
+/* Glass type: neutral translucent surfaces with their own backdrop blur; buttons are solid accent. */
+body[data-ui-type="glass"] :is(#dock,#overview,#dockPop),body[data-ui-type="glass"][data-fx] :is(#dock,#overview,#dockPop){background:var(--glass-panel);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--glass-edge),var(--float-shadow)}
+body[data-ui-type="glass"] #dock{--dot:var(--on-accent)}
+body[data-ui-type="glass"] :is(.dockBtn,.miniBtn){background:var(--accent);color:var(--on-accent);border:0}
+body[data-ui-type="glass"] .dockBtn[aria-pressed="true"]::after,body[data-ui-type="glass"] .dockBtn[aria-expanded="true"]::after{content:"";position:absolute;right:5px;top:5px;width:6px;height:6px;border-radius:50%;background:var(--dot)}
+body[data-ui-type="glass"] .popOpt:hover{background:var(--glass-block)}
+body[data-ui-type="glass"] .ovHead{color:var(--muted)}
+body[data-ui-type="glass"] #overview .stats div,body[data-ui-type="glass"] #overview select{box-shadow:var(--glass-edge)}
+
+@media(max-height:420px){#dock{gap:2px;padding:3px}.dockBtn{width:30px;height:30px}}

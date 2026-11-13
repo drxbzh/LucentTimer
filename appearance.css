@@ -2,18 +2,59 @@
    Base tokens and their defaults live in styles.css; this file only overrides them and styles the new settings UI.
    Style presets are selected with [data-ui-style] (on <body>, and on the preview tiles so each tile previews its own shape). */
 
-/* ---------- Interface style presets (control shape only; timer digits / scramble / layout are never touched) ---------- */
-/* "rounded" is the default and equals the original look, so it needs no overrides. */
-[data-ui-style="soft"]{--r-btn:6px;--r-ctl:6px;--r-card:8px;--r-chk:4px}
-[data-ui-style="sharp"]{--r-btn:0;--r-ctl:0;--r-card:0;--r-chk:0}
-[data-ui-style="hybrid"]{--r-btn:999px;--r-ctl:0;--r-card:0;--r-chk:0}
-[data-ui-style="minimal"]{--r-btn:5px;--r-ctl:5px;--r-card:5px;--r-chk:3px;--ctl-bg:rgba(128,128,128,.10);--card-bg:transparent;--btn-fill:transparent;--drawer-shadow:none}
-[data-ui-style="minimal"] .stats div{padding-left:2px;padding-right:2px}
-body[data-ui-style="minimal"] #newScramble:hover,body[data-ui-style="minimal"] .gearBtn:hover{background:var(--t-fill)}
+/* ---------- Interface style presets: SHAPE ONLY (radii). Fills, borders and blur belong to the Interface Type below. ---------- */
+/* "rounded" is the default and equals the original look, so it needs no overrides (--r-icon follows the button radius, i.e. circular). */
+[data-ui-style="soft"]{--r-btn:6px;--r-ctl:6px;--r-card:8px;--r-chk:4px;--r-icon:6px}
+[data-ui-style="sharp"]{--r-btn:0;--r-ctl:0;--r-card:0;--r-chk:0;--r-icon:0}
+/* Hybrid = Soft + Rounded: soft rounded rectangles for text buttons and longer controls, circles for icon-only controls. */
+[data-ui-style="hybrid"]{--r-btn:6px;--r-ctl:6px;--r-card:8px;--r-chk:4px;--r-icon:999px}
+[data-ui-style="minimal"]{--r-btn:5px;--r-ctl:5px;--r-card:5px;--r-chk:3px;--r-icon:5px}
+[data-ui-style="hybrid"] .stepBtn{border-radius:999px}
+
+/* ---------- Interface types: SURFACE TREATMENT ONLY (fill, border, blur). Selected with [data-ui-type] on <body> and on preview tiles. ---------- */
+[data-ui-type="solid"]{--bc:var(--line);--t-bc:var(--t-line);--bc-danger:#ff5a5a;--ctl-bg:var(--field);--card-bg:var(--field);--btn-fill:var(--t-fill)}
+[data-ui-type="soft"]{--bc:transparent;--t-bc:transparent;--bc-danger:transparent;--ctl-bg:var(--field);--card-bg:var(--field);--btn-fill:var(--t-fill)}
+[data-ui-type="minimal"]{--bc:transparent;--t-bc:transparent;--bc-danger:transparent;--ctl-bg:transparent;--card-bg:transparent;--btn-fill:transparent;--drawer-shadow:none;--float-shadow:none}
+/* Glass: neutral translucent surfaces. Fills are white/black alpha only; the GUI accent never tints them. */
+[data-ui-type="glass"]{--glass-panel:rgba(30,32,40,.55);--glass-block:rgba(255,255,255,.07);--glass-edge:inset 0 0 0 1px rgba(255,255,255,.09),inset 0 1px 0 rgba(255,255,255,.16);--glass-blur:blur(20px) saturate(140%);
+  --bc:transparent;--t-bc:transparent;--bc-danger:transparent;--ctl-bg:var(--glass-block);--card-bg:var(--glass-block);--btn-fill:var(--glass-block);--drawer-shadow:0 12px 40px rgba(0,0,0,.35);--float-shadow:0 6px 24px rgba(0,0,0,.32)}
+body.light [data-ui-type="glass"],body.light[data-ui-type="glass"]{--glass-panel:rgba(255,255,255,.58);--glass-block:rgba(0,0,0,.045);--glass-edge:inset 0 0 0 1px rgba(0,0,0,.07),inset 0 1px 0 rgba(255,255,255,.85);--drawer-shadow:0 12px 40px rgba(0,0,0,.14);--float-shadow:0 6px 24px rgba(0,0,0,.16)}
+
+/* Minimal type: ordinary elements have no blocks or borders. Form fields keep a faint underline / ring so they stay findable. */
+body[data-ui-type="minimal"] .stats div{padding-left:2px;padding-right:2px}
+body[data-ui-type="minimal"] #newScramble:hover,body[data-ui-type="minimal"] .gearBtn:hover{background:var(--t-fill)}
+body[data-ui-type="minimal"] :is(select,input[type=number],.cp-hex){box-shadow:inset 0 -1px 0 var(--line)}
+body[data-ui-type="minimal"] input[type=checkbox]:not(:checked){background:transparent;box-shadow:inset 0 0 0 1.5px var(--muted)}
+body[data-ui-type="minimal"] .seg{padding:0}
+body[data-ui-type="minimal"] .seg button[aria-checked="true"]{background:transparent;box-shadow:inset 0 -2px 0 var(--accent)}
+body[data-ui-type="minimal"] :is(.styleTile,.chip)[aria-checked="true"]{background:transparent;box-shadow:none}
+body[data-ui-type="minimal"] :is(.styleTile,.chip)[aria-checked="true"]::after{content:"✓";margin-left:auto;color:var(--accent);font-weight:700}
+body[data-ui-type="minimal"] .autoBtn.active{background:transparent}
+body[data-ui-type="minimal"] .posGrid button[aria-checked="true"]{background:transparent}
+body[data-ui-type="minimal"] .ghostBtn,body[data-ui-type="minimal"] .danger{background:transparent}
+
+/* Glass type */
+body[data-ui-type="glass"] .drawer,body[data-ui-type="glass"][data-fx] .drawer{background:var(--glass-panel);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--glass-edge),var(--drawer-shadow)}
+body[data-ui-type="glass"] .lt-adv-page{background:transparent}
+body[data-ui-type="glass"] .lt-adv-page.sub.open{box-shadow:none}
+body[data-ui-type="glass"] #lucentAdvMain{transition:transform .23s ease,opacity .23s ease}
+body[data-ui-type="glass"] #lucentAdvMain.pushed{opacity:0}
+body[data-ui-type="glass"] #scrim{background:#0003}
+body[data-ui-type="glass"] .scramblePop,body[data-ui-type="glass"][data-fx] .scramblePop{background:var(--glass-panel);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--glass-edge),var(--float-shadow)}
+body[data-ui-type="glass"] :is(.stats div,select,input[type=number],.cp-hex,.seg,.chip,.styleTile),body[data-ui-type="glass"][data-fx] .stats div{box-shadow:var(--glass-edge)}
+/* Buttons stay solid, opaque and borderless in the GUI accent colour (glow from Visual Effects still applies via box-shadow). */
+body[data-ui-type="glass"] :is(#newScramble,.gearBtn,.stepBtn,.autoBtn,.ghostBtn,#confirm button,.seg button[aria-checked="true"],.posGrid button[aria-checked="true"]){background:var(--accent);color:var(--on-accent);border:0}
+body[data-ui-type="glass"] .gearBtn.active{filter:brightness(.88)}
+body[data-ui-type="glass"] .autoBtn.active{box-shadow:inset 0 0 0 2px var(--on-accent),var(--fx-shadow,0 0 0 transparent)}
+body[data-ui-type="glass"] :is(.danger,#confirm #confirmYes){background:#ff5a5a;color:#fff;border:0}
+body[data-ui-type="glass"] .seg button[aria-checked="true"]{font-weight:700}
+body[data-ui-type="glass"] .styleTile,body[data-ui-type="glass"] .chip{background:var(--card-bg)}
+body[data-ui-type="glass"] :is(.styleTile,.chip)[aria-checked="true"]{background:var(--card-bg);box-shadow:inset 0 0 0 2px var(--accent)}
+body[data-ui-type="glass"] input[type=checkbox]:not(:checked){background:var(--glass-block);box-shadow:var(--glass-edge)}
 
 /* ---------- Visual effects (glow in dark mode, shadows in light mode). --fx-shadow is set by appearance.js; absent = no effect ---------- */
 body[data-fx] #newScramble,body[data-fx] .gearBtn,body[data-fx] .stepBtn,body[data-fx] .autoBtn,body[data-fx] .stats div,
-body[data-fx] .scramblePop,body[data-fx] #confirm button,body[data-fx] .danger,body[data-fx] .ghostBtn,
+body[data-fx] .scramblePop,body[data-fx] #dock,body[data-fx] #overview,body[data-fx] #dockPop,body[data-fx] .dockBtn,body[data-fx] #confirm button,body[data-fx] .danger,body[data-fx] .ghostBtn,
 body[data-fx] .seg button[aria-checked="true"],body[data-fx] input[type=checkbox]:checked{box-shadow:var(--fx-shadow)}
 body[data-fx] .styleTile[aria-checked="true"],body[data-fx] .chip[aria-checked="true"]{box-shadow:inset 0 0 0 2px var(--accent),var(--fx-shadow)}
 body[data-fx] .cp-thumb{box-shadow:0 0 0 1px rgba(0,0,0,.45),var(--fx-shadow)}
@@ -49,19 +90,28 @@ body[data-fx="shadow"] .stats div{box-shadow:var(--fx-shadow)}
 
 /* Interface style tiles */
 .tiles{display:flex;flex-direction:column;gap:8px}
-.styleTile{display:flex;align-items:center;gap:14px;width:100%;padding:11px 12px;border:0;border-radius:10px;background:var(--field);color:var(--text);font:inherit;text-align:left;cursor:pointer}
+.styleTile{display:flex;align-items:center;gap:14px;width:100%;padding:11px 12px;border:1px solid var(--bc);border-radius:10px;background:var(--card-bg);color:var(--text);font:inherit;text-align:left;cursor:pointer}
 .styleTile[aria-checked="true"]{background:var(--accent-soft);box-shadow:inset 0 0 0 2px var(--accent)}
-.styleTile .sample{display:flex;align-items:center;gap:6px;flex:none;width:76px}
-.styleTile .sb{display:block;width:30px;height:20px;border-radius:var(--r-btn);background:var(--accent)}
-.styleTile .sc{display:block;width:30px;height:24px;border-radius:var(--r-card);background:var(--field2)}
+.styleTile .sample{display:flex;align-items:center;gap:5px;flex:none;width:84px}
+.styleTile .sb{display:block;width:28px;height:18px;border-radius:var(--r-btn);background:var(--accent)}
+.styleTile .si{display:block;width:18px;height:18px;border-radius:var(--r-icon);background:var(--accent)}
+.styleTile .sc{display:block;width:22px;height:22px;border-radius:var(--r-card);background:var(--field2)}
+/* Type tiles preview their own surface treatment on a neutral plate */
+.typeTile .sample{padding:6px;border-radius:8px;background:linear-gradient(135deg,rgba(128,128,128,.4),rgba(128,128,128,.08))}
+.typeTile .sb,.typeTile .si{width:18px;height:18px;border-radius:5px}
+.typeTile .si{display:none}
+.typeTile .sc{width:34px;height:22px;border-radius:5px;background:var(--card-bg);box-shadow:inset 0 0 0 1px var(--bc)}
+.typeTile[data-ui-type="glass"] .sc{box-shadow:var(--glass-edge);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.typeTile[data-ui-type="glass"] .sb{background:var(--accent)}
+.typeTile[data-ui-type="minimal"] .sb{background:transparent;box-shadow:none}
 .styleTile .st-text{display:flex;flex-direction:column;gap:2px;min-width:0}
 .styleTile b{font-weight:600;font-size:.95rem}
 .styleTile small{color:var(--muted);font-size:.74rem;line-height:1.4}
-[data-ui-style="minimal"].styleTile .sb{background:transparent;box-shadow:inset 0 0 0 1.5px var(--accent)}
+
 
 /* Colour presets */
 .chips{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-.chip{display:flex;align-items:center;gap:10px;padding:10px 12px;border:0;border-radius:var(--r-ctl);background:var(--ctl-bg);color:var(--text);font:inherit;font-size:.88rem;cursor:pointer;text-align:left}
+.chip{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--bc);border-radius:var(--r-ctl);background:var(--ctl-bg);color:var(--text);font:inherit;font-size:.88rem;cursor:pointer;text-align:left}
 .chip[aria-checked="true"]{background:var(--accent-soft);box-shadow:inset 0 0 0 2px var(--accent)}
 .chip .sw{flex:none;width:26px;height:26px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(128,128,128,.45)}
 
@@ -90,7 +140,7 @@ body[data-fx="shadow"] .stats div{box-shadow:var(--fx-shadow)}
 .bgPreview{position:relative;overflow:hidden;align-self:center;width:min(100%,calc(210px * var(--ar,.6)));aspect-ratio:var(--ar,.6);max-height:210px;border-radius:var(--r-ctl);background:var(--timer-bg);box-shadow:inset 0 0 0 1px rgba(128,128,128,.35)}
 .bgPreview .bgp-img,.bgPreview .bgp-ov{position:absolute;inset:0;display:none}
 .bgPreview .bgp-img{background-repeat:no-repeat}
-.bgPreview .bgp-time{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;font-size:2rem;font-weight:300;letter-spacing:-.05em;color:var(--t-text);text-shadow:0 0 14px var(--t-shadow)}
+.bgPreview .bgp-time{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;font-size:2rem;font-weight:300;letter-spacing:-.05em;color:var(--t-text)}
 .bgPreview .bgp-scr{position:absolute;left:8%;right:8%;top:9%;text-align:center;font-size:.55rem;line-height:1.5;color:var(--t-text);opacity:.85;text-shadow:0 0 10px var(--t-shadow)}
 .posGrid{display:grid;grid-template-columns:repeat(3,38px);gap:5px}
 .posGrid button{width:38px;height:38px;padding:0;border:0;border-radius:max(0px,min(10px,var(--r-ctl)));background:var(--ctl-bg);color:var(--muted);cursor:pointer;display:grid;place-items:center}
@@ -102,4 +152,10 @@ body[data-fx="shadow"] .stats div{box-shadow:var(--fx-shadow)}
 .pane{display:flex;flex-direction:column;gap:14px}
 .srOnly{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 body[data-tbg="image"] #timerBg{display:block}
-body[data-tbg="image"] #time,body[data-tbg="image"] #scramble,body[data-tbg="image"] #status{text-shadow:0 0 18px var(--t-shadow)}
+/* Scramble/status stay readable on photos. The timer digits are NOT shadowed here: that is the Timer Effect setting's job. */
+body[data-tbg="image"] #scramble,body[data-tbg="image"] #status{text-shadow:0 0 18px var(--t-shadow)}
+
+/* ---------- Timer Effect: the timer digits ONLY (not buttons, scramble or panels). Independent of the button Glow in Visual Effects,
+   and never switched by the timer background. ---------- */
+body[data-timer-fx="glow"] #time,body[data-timer-fx="glow"] .bgp-time{text-shadow:0 0 .1em currentColor,0 0 .3em currentColor;text-shadow:0 0 .1em color-mix(in srgb,currentColor 75%,transparent),0 0 .32em color-mix(in srgb,currentColor 50%,transparent)}
+body[data-timer-fx="shadow"] #time,body[data-timer-fx="shadow"] .bgp-time{text-shadow:0 .04em .07em rgba(0,0,0,.6),0 .09em .22em rgba(0,0,0,.4)}

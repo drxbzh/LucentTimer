@@ -1,7 +1,8 @@
 import {initAppearance,APPEARANCE_DEFAULTS} from './appearance.js';
+import {initDock,DOCK_DEFAULT} from './dock.js';
 (()=>{
 const $=id=>document.getElementById(id);
-const defaults={startMethod:'hold',inspectionEnabled:false,inspectionLength:15,precision:2,theme:'dark',leadingZero:true,keepAwake:true,vibrationEnabled:true,soundEnabled:true,scrambleLength:0,platformMode:'auto',timerSize:100,timerFont:'roboto',timerWeight:'light',...APPEARANCE_DEFAULTS};
+const defaults={startMethod:'hold',inspectionEnabled:false,inspectionLength:15,precision:2,theme:'dark',leadingZero:true,keepAwake:true,vibrationEnabled:true,soundEnabled:true,scrambleLength:0,platformMode:'auto',timerSize:100,timerFont:'roboto',timerWeight:'light',dockItems:[...DOCK_DEFAULT],overviewOpen:null,...APPEARANCE_DEFAULTS};
 let storedSettings={};
 try{storedSettings=JSON.parse(localStorage.getItem('ct-settings')||'{}')||{}}catch{}
 let settings={...defaults,...storedSettings};
@@ -24,6 +25,15 @@ const show=ms=>$('time').textContent=fmt(ms);
 const save=()=>localStorage.setItem('ct-settings',JSON.stringify(settings));
 // Appearance (Display Settings customisation): see appearance.js. Visual only; shares the ct-settings store.
 const appearance=initAppearance({settings,save});
+// Left quick-access dock (see dock.js). Shortcuts change settings through the same inputs/handlers as the Settings pages.
+function setFromDock(key,value){const el=document.getElementById(key);if(el&&(el.tagName==='SELECT'||el.type==='checkbox')){if(el.type==='checkbox')el.checked=!!value;else el.value=String(value);el.dispatchEvent(new Event('change',{bubbles:true}))}else appearance.set(key,value)}
+const dock=initDock({settings,save,setSetting:(k,v)=>{setFromDock(k,v);dock.sync()},openSettings:()=>open('advanced'),beforeOpen:()=>closeScramblePop()});
+// Solve Overview tab: open/collapsed. Until the user chooses, it is open on wide screens and collapsed on narrow ones.
+const overviewIsOpen=()=>typeof settings.overviewOpen==='boolean'?settings.overviewOpen:window.innerWidth>=700;
+function applyOverview(){const o=overviewIsOpen(),t=$('overviewToggle');$('overview').dataset.open=String(o);t.setAttribute('aria-expanded',String(o));t.setAttribute('aria-label',o?'Hide solve overview':'Show solve overview')}
+function setOverview(on){settings.overviewOpen=!!on;save();applyOverview()}
+$('overviewToggle').onclick=()=>{setOverview(!overviewIsOpen());$('overviewToggle').blur()};
+addEventListener('resize',applyOverview);
 const saveSolves=()=>localStorage.setItem('ct-solves',JSON.stringify(solves));
 const isDnf=v=>v.penalty==='dnf';
 const effective=v=>v.ms+(v.penalty===2?2000:0);
@@ -54,17 +64,17 @@ function render(){
   (timesExpanded?solves:solves.slice(0,RECENT_COUNT)).forEach((v,i)=>{const li=document.createElement('li');const number=document.createElement('span');number.textContent=`${solves.length-i}.`;const val=document.createElement('span');val.textContent=label(v);li.append(number,val);if(v.scramble)li.classList.add('has-scramble');li.onclick=()=>{if(v.scramble)alert(v.scramble)};h.append(li)});
   if(!solves.length)h.innerHTML='<li class="empty">Your solves will appear here.</li>';
   h.classList.toggle('expanded',timesExpanded);
-  appearance.sync();
+  appearance.sync();dock.sync();applyOverview();
   const tog=$('historyToggle');tog.hidden=solves.length<=RECENT_COUNT;tog.textContent=timesExpanded?'Show less':'Show all';tog.setAttribute('aria-expanded',String(timesExpanded));
 }
 $('historyToggle').addEventListener('click',()=>{timesExpanded=!timesExpanded;render();if(!timesExpanded)$('history').scrollTop=0});
 function close(){document.querySelectorAll('.drawer').forEach(x=>x.classList.remove('open'));$('scrim').classList.remove('open');setTimeout(()=>{if(!drawersOpen())resetAdvanced()},300);if(document.activeElement&&document.activeElement.matches('button,input,select,textarea'))document.activeElement.blur();}
-function open(which){closeScramblePop();close();resetAdvanced();$(which).classList.add('open');$('scrim').classList.add('open')}
+function open(which){closeScramblePop();dock.closePop();close();resetAdvanced();$(which).classList.add('open');$('scrim').classList.add('open')}
 function resetAdvanced(){document.querySelectorAll('#advanced .sub').forEach(x=>x.classList.remove('open'));$('lucentAdvMain').classList.remove('pushed')}
 function goBack(){const s=document.querySelector('#advanced .sub.open');if(!s)return false;s.classList.remove('open');$('lucentAdvMain').classList.remove('pushed');return true}
 document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{$(b.dataset.go).classList.add('open');$('lucentAdvMain').classList.add('pushed')});
 document.querySelectorAll('[data-back]').forEach(b=>b.onclick=goBack);
-const drawersOpen=()=>$('quick').classList.contains('open')||$('advanced').classList.contains('open');
+const drawersOpen=()=>$('advanced').classList.contains('open');
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=close);$('scrim').onclick=close;
 function vibrate(pattern=12){if(!settings.vibrationEnabled||!navigator.vibrate)return;try{navigator.vibrate(pattern)}catch{}}
 function unlockAudio(){if(!settings.soundEnabled)return;try{const AudioCtx=window.AudioContext||window.webkitAudioContext;if(!AudioCtx)return;audioContext ||= new AudioCtx();if(audioContext.state==='suspended')audioContext.resume()}catch{}}
@@ -80,7 +90,7 @@ function run(){
     const left=settings.inspectionLength-(performance.now()-inspectionStart)/1000;
     pendingPenalty=left>0?0:left>-2?2:'dnf';
   }else pendingPenalty=0;
-  state='running';resultShown=false;setScrambleHidden(true);setStatus('');start=performance.now();show(0);cancelAnimationFrame(raf);
+  state='running';document.body.classList.add('is-running');resultShown=false;setScrambleHidden(true);setStatus('');start=performance.now();show(0);cancelAnimationFrame(raf);
   const loop=()=>{if(state==='running'){show(performance.now()-start);raf=requestAnimationFrame(loop)}};raf=requestAnimationFrame(loop);
 }
 function updateInspection(){
@@ -97,7 +107,7 @@ function begin(){if(state!=='idle')return;unlockAudio();if(settings.inspectionEn
 function stop(){
   if(state!=='running')return;
   const result=performance.now()-start,solve={ms:result,scramble:currentScramble,penalty:pendingPenalty};
-  state='idle';resultShown=true;setScrambleHidden(false);cancelAnimationFrame(raf);setPressed(false);
+  state='idle';document.body.classList.remove('is-running');resultShown=true;setScrambleHidden(false);cancelAnimationFrame(raf);setPressed(false);
   if(isDnf(solve)){$('time').textContent='DNF';setStatus(fmt(result))}else $('time').textContent=label(solve);
   solves.unshift(solve);solves=solves.slice(0,500);saveSolves();render();generateScramble();
 }
@@ -150,7 +160,7 @@ function pressStart(source,e){
   if(press)return;
   const allowed=source==='key'||settings.startMethod!=='keyboard';
   const holdMode=source==='key' ? true : settings.startMethod==='hold';
-  if(source==='key'||settings.startMethod!=='keyboard')closeScramblePop();
+  if(source==='key'||settings.startMethod!=='keyboard'){closeScramblePop();dock.closePop()}
   press={source,id:e?.pointerId,x:e?.clientX,y:e?.clientY,moved:false,armed:false,allowed,holdMode,timer:0,vertical:false,ticked:false,committed:false};
   setPressed(true);
   if(allowed&&(state==='inspection'||!settings.inspectionEnabled))setScrambleHidden(true);
@@ -183,7 +193,7 @@ document.addEventListener('pointerdown',e=>{
   }
   e.preventDefault();
   e.stopImmediatePropagation();
-  open(e.clientX<window.innerWidth/2?'advanced':'quick');
+  if(e.clientX<window.innerWidth/2)open('advanced');else setOverview(!overviewIsOpen());
 },true);
 
 document.addEventListener('pointerdown',e=>{
@@ -204,7 +214,7 @@ document.addEventListener('pointermove',e=>{
 document.addEventListener('pointerup',e=>{
   if(!press||press.source!=='pointer'||press.id!==e.pointerId)return;
   const p=press,dx=e.clientX-p.x,dy=e.clientY-p.y;
-  if((effectivePlatformMode()==='mobile'||e.pointerType==='touch')&&Math.abs(dx)>SWIPE&&Math.abs(dx)>Math.abs(dy)*1.25){pressEnd(true);open(dx<0?'quick':'advanced');return}
+  if((effectivePlatformMode()==='mobile'||e.pointerType==='touch')&&Math.abs(dx)>SWIPE&&Math.abs(dx)>Math.abs(dy)*1.25){pressEnd(true);if(dx<0)setOverview(true);else open('advanced');return}
   if(Math.abs(dy)>SWIPE&&Math.abs(dy)>Math.abs(dx)*1.25){if(state==='idle'&&resultShown)commitSwipe(p,dy<0?'up':'down');pressEnd(true);return}
   pressEnd(false);
 },true);
@@ -220,14 +230,14 @@ document.addEventListener('keydown',e=>{
   const k=e.key.length===1?e.key.toLowerCase():e.key,plain=!(e.ctrlKey||e.metaKey||e.altKey);
   if(confirmOpen()){e.preventDefault();if(k==='Enter'||k==='y')confirmDelete();else if(k==='Escape'||k==='n')cancelDelete();return}
   if(drawersOpen()){
-    if(plain&&(k==='q'||k==='a')){e.preventDefault();const which=k==='q'?'quick':'advanced';$(which).classList.contains('open')?close():open(which)}
+    if(plain&&k==='a'){e.preventDefault();close()}
     return;
   }
   if(state==='running'){e.preventDefault();stop();return}
   if(e.code==='Space'){e.preventDefault();pressStart('key');return}
   if(state==='inspection'){if(k==='Escape'){e.preventDefault();pressEnd(true);cancelInspection()}return}
   if(state!=='idle'||press||!plain)return;
-  if(k==='q')open('quick');
+  if(k==='q')setOverview(!overviewIsOpen());
   else if(k==='a')open('advanced');
   else if(k==='n')generateScramble();
   else if(resultShown&&k==='2')togglePlus2(true);
