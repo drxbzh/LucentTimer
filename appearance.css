@@ -1,0 +1,105 @@
+/* Appearance system: interface-style presets, Display Settings accordions, colour picker, visual effects.
+   Base tokens and their defaults live in styles.css; this file only overrides them and styles the new settings UI.
+   Style presets are selected with [data-ui-style] (on <body>, and on the preview tiles so each tile previews its own shape). */
+
+/* ---------- Interface style presets (control shape only; timer digits / scramble / layout are never touched) ---------- */
+/* "rounded" is the default and equals the original look, so it needs no overrides. */
+[data-ui-style="soft"]{--r-btn:6px;--r-ctl:6px;--r-card:8px;--r-chk:4px}
+[data-ui-style="sharp"]{--r-btn:0;--r-ctl:0;--r-card:0;--r-chk:0}
+[data-ui-style="hybrid"]{--r-btn:999px;--r-ctl:0;--r-card:0;--r-chk:0}
+[data-ui-style="minimal"]{--r-btn:5px;--r-ctl:5px;--r-card:5px;--r-chk:3px;--ctl-bg:rgba(128,128,128,.10);--card-bg:transparent;--btn-fill:transparent;--drawer-shadow:none}
+[data-ui-style="minimal"] .stats div{padding-left:2px;padding-right:2px}
+body[data-ui-style="minimal"] #newScramble:hover,body[data-ui-style="minimal"] .gearBtn:hover{background:var(--t-fill)}
+
+/* ---------- Visual effects (glow in dark mode, shadows in light mode). --fx-shadow is set by appearance.js; absent = no effect ---------- */
+body[data-fx] #newScramble,body[data-fx] .gearBtn,body[data-fx] .stepBtn,body[data-fx] .autoBtn,body[data-fx] .stats div,
+body[data-fx] .scramblePop,body[data-fx] #confirm button,body[data-fx] .danger,body[data-fx] .ghostBtn,
+body[data-fx] .seg button[aria-checked="true"],body[data-fx] input[type=checkbox]:checked{box-shadow:var(--fx-shadow)}
+body[data-fx] .styleTile[aria-checked="true"],body[data-fx] .chip[aria-checked="true"]{box-shadow:inset 0 0 0 2px var(--accent),var(--fx-shadow)}
+body[data-fx] .cp-thumb{box-shadow:0 0 0 1px rgba(0,0,0,.45),var(--fx-shadow)}
+body[data-fx] select:focus-visible,body[data-fx] input[type=number]:focus,body[data-fx] .cp-hex:focus{box-shadow:var(--fx-shadow)}
+body[data-fx] .drawer{box-shadow:var(--fx-shadow),var(--drawer-shadow)}
+body[data-fx="shadow"] .stats div{box-shadow:var(--fx-shadow)}
+
+/* ---------- Display Settings: accordions ---------- */
+.acc-list{border-top:1px solid var(--line);margin-top:6px}
+.acc{border-bottom:1px solid var(--line)}
+.acc>summary{display:flex;justify-content:space-between;align-items:center;padding:17px 2px;font-size:1.02rem;cursor:pointer;list-style:none;-webkit-tap-highlight-color:transparent}
+.acc>summary::-webkit-details-marker{display:none}
+.acc>summary i{font-style:normal;color:var(--muted);font-size:1.5rem;line-height:1;transition:transform .18s}
+.acc[open]>summary i{transform:rotate(90deg)}
+.acc>summary:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.acc-body{padding:2px 0 20px;display:flex;flex-direction:column;gap:14px}
+.acc-body .hint{margin:0}
+.acc-body label{padding:4px 0}
+.subhead{font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:2px 0 -4px}
+.rowEnd{display:flex;justify-content:flex-end;gap:8px;align-items:center}
+.ghostBtn{border:1px solid var(--bc);border-radius:var(--r-btn);background:var(--ctl-bg);color:var(--text);padding:9px 15px;font:inherit;font-size:.82rem;cursor:pointer}
+.ghostBtn:disabled{opacity:.45;cursor:default}
+.ghostBtn:focus-visible,.seg button:focus-visible,.styleTile:focus-visible,.chip:focus-visible,.posGrid button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.msg{min-height:1.2em;font-size:.75rem;line-height:1.5;color:var(--muted);margin:0}
+.msg.err{color:#ff7a7a}
+
+/* Segmented control (radio group) */
+.seg{display:flex;gap:3px;padding:3px;background:var(--ctl-bg);border:1px solid var(--bc);border-radius:var(--r-ctl)}
+.seg button{flex:1;min-width:0;border:0;background:transparent;color:var(--muted);font:inherit;font-size:.78rem;padding:9px 2px;border-radius:max(0px,calc(var(--r-ctl) - 3px));cursor:pointer;white-space:nowrap}
+.seg button[aria-checked="true"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+[data-ui-style="sharp"] .seg button,[data-ui-style="hybrid"] .seg button{border-radius:0}
+.seg.small button{padding:7px 2px;font-size:.74rem}
+
+/* Interface style tiles */
+.tiles{display:flex;flex-direction:column;gap:8px}
+.styleTile{display:flex;align-items:center;gap:14px;width:100%;padding:11px 12px;border:0;border-radius:10px;background:var(--field);color:var(--text);font:inherit;text-align:left;cursor:pointer}
+.styleTile[aria-checked="true"]{background:var(--accent-soft);box-shadow:inset 0 0 0 2px var(--accent)}
+.styleTile .sample{display:flex;align-items:center;gap:6px;flex:none;width:76px}
+.styleTile .sb{display:block;width:30px;height:20px;border-radius:var(--r-btn);background:var(--accent)}
+.styleTile .sc{display:block;width:30px;height:24px;border-radius:var(--r-card);background:var(--field2)}
+.styleTile .st-text{display:flex;flex-direction:column;gap:2px;min-width:0}
+.styleTile b{font-weight:600;font-size:.95rem}
+.styleTile small{color:var(--muted);font-size:.74rem;line-height:1.4}
+[data-ui-style="minimal"].styleTile .sb{background:transparent;box-shadow:inset 0 0 0 1.5px var(--accent)}
+
+/* Colour presets */
+.chips{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.chip{display:flex;align-items:center;gap:10px;padding:10px 12px;border:0;border-radius:var(--r-ctl);background:var(--ctl-bg);color:var(--text);font:inherit;font-size:.88rem;cursor:pointer;text-align:left}
+.chip[aria-checked="true"]{background:var(--accent-soft);box-shadow:inset 0 0 0 2px var(--accent)}
+.chip .sw{flex:none;width:26px;height:26px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(128,128,128,.45)}
+
+/* Colour picker */
+.cp{display:flex;flex-direction:column;gap:10px;align-items:stretch}
+.cp-wheel{position:relative;align-self:center;width:min(200px,62vw);aspect-ratio:1;border-radius:50%;touch-action:none;cursor:crosshair;outline:none;user-select:none;-webkit-user-select:none}
+.cp-wheel:focus-visible{box-shadow:0 0 0 2px var(--accent)}
+.cp-ring{position:absolute;inset:0;border-radius:50%;background:conic-gradient(#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00);-webkit-mask:radial-gradient(circle,transparent 57%,#000 58%);mask:radial-gradient(circle,transparent 57%,#000 58%)}
+.cp-center{position:absolute;left:50%;top:50%;width:46%;height:46%;transform:translate(-50%,-50%);border-radius:50%;box-shadow:inset 0 0 0 1px rgba(128,128,128,.5)}
+.cp-thumb{position:absolute;width:24px;height:24px;margin:-12px 0 0 -12px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.4);pointer-events:none}
+.cp-row{display:flex;align-items:center;gap:12px;padding:2px 0}
+.cp-row>span{flex:none;width:84px;font-size:.88rem}
+.cp-hex{flex:1;min-width:0;background:var(--ctl-bg);color:var(--text);border:1px solid var(--bc);border-radius:var(--r-ctl);padding:9px;font:inherit;font-size:.85rem;font-family:ui-monospace,Menlo,Consolas,monospace;text-transform:uppercase}
+.slider{-webkit-appearance:none;appearance:none;flex:1;min-width:0;height:24px;margin:0;background:transparent;cursor:pointer}
+.slider::-webkit-slider-runnable-track{height:10px;border-radius:max(2px,min(999px,var(--r-ctl)));background:var(--track,var(--field2))}
+.slider::-moz-range-track{height:10px;border-radius:max(2px,min(999px,var(--r-ctl)));background:var(--track,var(--field2))}
+.slider::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;margin-top:-6px;border-radius:50%;background:#fff;border:2px solid rgba(0,0,0,.35);box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.slider::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#fff;border:2px solid rgba(0,0,0,.35)}
+.slider:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.slider:disabled{opacity:.4;cursor:default}
+.cp-s{--track:linear-gradient(90deg,var(--cp-s0,#fff),var(--cp-s1,#f00))}
+.cp-v{--track:linear-gradient(90deg,#000,var(--cp-v1,#fff))}
+.fx-slider{--track:var(--field2)}
+
+/* Timer background section */
+.bgPreview{position:relative;overflow:hidden;align-self:center;width:min(100%,calc(210px * var(--ar,.6)));aspect-ratio:var(--ar,.6);max-height:210px;border-radius:var(--r-ctl);background:var(--timer-bg);box-shadow:inset 0 0 0 1px rgba(128,128,128,.35)}
+.bgPreview .bgp-img,.bgPreview .bgp-ov{position:absolute;inset:0;display:none}
+.bgPreview .bgp-img{background-repeat:no-repeat}
+.bgPreview .bgp-time{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;font-size:2rem;font-weight:300;letter-spacing:-.05em;color:var(--t-text);text-shadow:0 0 14px var(--t-shadow)}
+.bgPreview .bgp-scr{position:absolute;left:8%;right:8%;top:9%;text-align:center;font-size:.55rem;line-height:1.5;color:var(--t-text);opacity:.85;text-shadow:0 0 10px var(--t-shadow)}
+.posGrid{display:grid;grid-template-columns:repeat(3,38px);gap:5px}
+.posGrid button{width:38px;height:38px;padding:0;border:0;border-radius:max(0px,min(10px,var(--r-ctl)));background:var(--ctl-bg);color:var(--muted);cursor:pointer;display:grid;place-items:center}
+.posGrid button::after{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.posGrid button[aria-checked="true"]{background:var(--accent-soft);color:var(--accent)}
+.posGrid.off{opacity:.4;pointer-events:none}
+.posWrap{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.pane[hidden]{display:none}
+.pane{display:flex;flex-direction:column;gap:14px}
+.srOnly{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+body[data-tbg="image"] #timerBg{display:block}
+body[data-tbg="image"] #time,body[data-tbg="image"] #scramble,body[data-tbg="image"] #status{text-shadow:0 0 18px var(--t-shadow)}

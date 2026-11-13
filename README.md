@@ -27,6 +27,18 @@ Upload the project folder to your existing HTTPS static host. For an existing Ne
 - 3x3 random-state scrambles (or a custom length from 1 to 200 random moves, set in Settings; custom lengths work offline), manual refresh, and scramble saved with each solve.
 - Recent solves, best, mean, dark/light appearance, precision, and screen wake lock (on by default).
 
+## Appearance customisation (Settings → Display)
+
+Five independent, collapsible sections. Changing one never changes another.
+
+- **Interface Style:** Sharp, Soft, Rounded (default, the original look), Hybrid, Minimal. Shapes buttons, controls and settings only; timer digits, scramble and layout are unchanged.
+- **GUI Colours:** presets Midnight, Arctic, Ember, Forest, or your own accent and surface colours (wheel, saturation, brightness, HEX). Colours are stored per dark/light mode; presets set both. Reset restores the defaults.
+- **Borders:** off by default; independent of the interface style.
+- **Visual Effects:** dark mode glow (Off/Subtle/Medium/Strong/Intense, follows the accent colour); light mode shadows (on/off + intensity). Off by default; both are remembered when you switch modes.
+- **Timer Background:** default, solid colour, or an image from your device (fit, position, dark/light overlay and opacity). Independent of GUI colours.
+
+Storage: all preferences are in the same `ct-settings` localStorage object (invalid values fall back to defaults). The background image is stored once in IndexedDB (`lucent-timer-media`), downscaled to at most 2560px, so it persists and works offline. Code: `appearance.js`, `appearance.css`.
+
 ## Scramble connectivity
 
 The 3x3 scrambler uses `cubing.js` from `cdn.cubing.net` to generate random-state scrambles. The app shell remains service-worker cached, but generating fresh scrambles currently requires an internet connection. Offline scramble generation is a future improvement.

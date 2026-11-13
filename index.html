@@ -8,9 +8,11 @@
 <link rel="icon" href="icons/icon.svg">
 <title>LucentTimer</title>
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="appearance.css">
 </head>
 <body>
 <main id="screen">
+  <div id="timerBg" aria-hidden="true"></div><div id="timerBgOverlay" aria-hidden="true"></div>
   <div id="scramblePanel">
     <div id="scramble" aria-live="polite">Generating scramble…</div>
     <div id="scrambleActions" class="scrambleActions">
@@ -93,6 +95,74 @@
       <label>Appearance<select id="theme"><option value="dark">Dark</option><option value="light">Light</option></select></label>
       <label>Keep screen awake<input id="keepAwake" type="checkbox" checked></label>
     </section>
+    <div class="acc-list" id="appearanceSettings">
+      <details class="acc" id="accStyle">
+        <summary><span>Interface Style</span><i aria-hidden="true">›</i></summary>
+        <div class="acc-body">
+          <div id="styleTiles" class="tiles" role="radiogroup" aria-label="Interface style"></div>
+          <p class="hint">Shapes buttons, controls and settings. The timer digits, scramble and layout never change.</p>
+        </div>
+      </details>
+      <details class="acc" id="accColours">
+        <summary><span>GUI Colours</span><i aria-hidden="true">›</i></summary>
+        <div class="acc-body">
+          <div id="presetChips" class="chips" role="radiogroup" aria-label="Colour presets"></div>
+          <div id="guiTarget" class="seg" role="radiogroup" aria-label="Colour to edit"><button type="button" role="radio" data-t="accent">Accent</button><button type="button" role="radio" data-t="surface">Surface</button></div>
+          <div id="guiPicker"></div>
+          <div class="rowEnd"><button id="guiReset" class="ghostBtn" type="button">Reset colours</button></div>
+          <p class="hint" id="guiHint"></p>
+        </div>
+      </details>
+      <details class="acc" id="accBorders">
+        <summary><span>Borders</span><i aria-hidden="true">›</i></summary>
+        <div class="acc-body">
+          <label>Show borders<input id="bordersToggle" type="checkbox"></label>
+          <p class="hint">Outlines buttons, fields and panels. Off by default, and independent of the interface style.</p>
+        </div>
+      </details>
+      <details class="acc" id="accEffects">
+        <summary><span>Visual Effects</span><i aria-hidden="true">›</i></summary>
+        <div class="acc-body">
+          <div id="fxDark" class="pane">
+            <div class="subhead">Glow</div>
+            <div id="glowSeg" class="seg small" role="radiogroup" aria-label="Glow intensity"></div>
+            <p class="hint">Glow uses your GUI accent colour. Off by default.</p>
+          </div>
+          <div id="fxLight" class="pane" hidden>
+            <div class="subhead">Shadows</div>
+            <label>Enable shadows<input id="shadowToggle" type="checkbox"></label>
+            <label class="stacked-control" for="shadowIntensity">Intensity <output id="shadowIntensityValue">40%</output></label>
+            <input id="shadowIntensity" class="slider fx-slider" type="range" min="5" max="100" step="5" value="40">
+            <p class="hint">Soft shadows tinted by your accent colour. Off by default.</p>
+          </div>
+          <p class="hint">Glow (dark) and shadow (light) settings are saved separately, so switching modes keeps both.</p>
+        </div>
+      </details>
+      <details class="acc" id="accBackground">
+        <summary><span>Timer Background</span><i aria-hidden="true">›</i></summary>
+        <div class="acc-body" id="bgMode">
+          <div id="bgModeSeg" class="seg" role="radiogroup" aria-label="Background type"><button type="button" role="radio" data-mode="default">Default</button><button type="button" role="radio" data-mode="color">Colour</button><button type="button" role="radio" data-mode="image">Image</button></div>
+          <div id="bgPreview" class="bgPreview" aria-label="Background preview" role="img"><div class="bgp-img"></div><div class="bgp-ov"></div><div class="bgp-scr">R U2 F' D2 L B2 U' R2 F L2 D</div><div class="bgp-time">12.34</div></div>
+          <div id="bgColourPane" class="pane" hidden>
+            <div id="bgPicker"></div>
+            <div class="rowEnd"><button id="bgReset" class="ghostBtn" type="button">Reset to default</button></div>
+          </div>
+          <div id="bgImagePane" class="pane" hidden>
+            <div class="rowEnd" style="justify-content:space-between"><button id="bgChoose" class="ghostBtn" type="button">Choose image…</button><button id="bgRemove" class="ghostBtn" type="button" hidden>Remove</button></div>
+            <input id="bgFile" class="srOnly" type="file" accept="image/*" tabindex="-1" aria-hidden="true">
+            <p class="msg" id="bgImageInfo"></p>
+            <label>Image fit<select id="bgFit"><option value="cover">Fill (crop to fit)</option><option value="contain">Fit (show whole image)</option><option value="stretch">Stretch</option><option value="original">Original size</option></select></label>
+            <div class="posWrap"><span>Position</span><div id="bgPos" class="posGrid" role="radiogroup" aria-label="Image position"></div></div>
+            <div class="subhead">Overlay</div>
+            <div id="bgOverlaySeg" class="seg small" role="radiogroup" aria-label="Overlay"><button type="button" role="radio" data-o="off">Off</button><button type="button" role="radio" data-o="dark">Dark</button><button type="button" role="radio" data-o="light">Light</button></div>
+            <label class="stacked-control" for="bgOpacity">Overlay opacity <output id="bgOpacityValue">35%</output></label>
+            <input id="bgOpacity" class="slider fx-slider" type="range" min="0" max="90" step="1" value="35">
+          </div>
+          <p class="msg" id="bgMsg" aria-live="polite"></p>
+          <p class="hint">Independent from GUI colours. Imported images are stored on this device only and work offline.</p>
+        </div>
+      </details>
+    </div>
   </div>
   <div class="lt-adv-page sub" id="advFeedback">
     <header><div class="titlebar"><button data-back aria-label="Back">‹</button><h1>Feedback</h1></div><button data-close aria-label="Close">×</button></header>
@@ -111,7 +181,7 @@
   </div>
   <div class="lt-adv-page sub" id="advAbout">
     <header><div class="titlebar"><button data-back aria-label="Back">‹</button><h1>About</h1></div><button data-close aria-label="Close">×</button></header>
-    <section><p class="about">LucentTimer. Settings and solve history are stored on this device. Each solve is saved with its scramble.</p><p class="hint">Version 0.8</p></section>
+    <section><p class="about">LucentTimer. Settings and solve history are stored on this device. Each solve is saved with its scramble.</p><p class="hint">Version 0.9</p></section>
   </div>
 </aside>
 <script type="module" src="app.js"></script>

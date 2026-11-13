@@ -1,6 +1,7 @@
+import {initAppearance,APPEARANCE_DEFAULTS} from './appearance.js';
 (()=>{
 const $=id=>document.getElementById(id);
-const defaults={startMethod:'hold',inspectionEnabled:false,inspectionLength:15,precision:2,theme:'dark',leadingZero:true,keepAwake:true,vibrationEnabled:true,soundEnabled:true,scrambleLength:0,platformMode:'auto',timerSize:100,timerFont:'roboto',timerWeight:'light'};
+const defaults={startMethod:'hold',inspectionEnabled:false,inspectionLength:15,precision:2,theme:'dark',leadingZero:true,keepAwake:true,vibrationEnabled:true,soundEnabled:true,scrambleLength:0,platformMode:'auto',timerSize:100,timerFont:'roboto',timerWeight:'light',...APPEARANCE_DEFAULTS};
 let storedSettings={};
 try{storedSettings=JSON.parse(localStorage.getItem('ct-settings')||'{}')||{}}catch{}
 let settings={...defaults,...storedSettings};
@@ -21,6 +22,8 @@ const effectivePlatformMode=()=> settings.platformMode === 'auto' ? detectPlatfo
 const fmt=ms=>{let s=(Math.max(0,ms)/1000).toFixed(+settings.precision);return !settings.leadingZero&&s.startsWith('0')?s.slice(1):s};
 const show=ms=>$('time').textContent=fmt(ms);
 const save=()=>localStorage.setItem('ct-settings',JSON.stringify(settings));
+// Appearance (Display Settings customisation): see appearance.js. Visual only; shares the ct-settings store.
+const appearance=initAppearance({settings,save});
 const saveSolves=()=>localStorage.setItem('ct-solves',JSON.stringify(solves));
 const isDnf=v=>v.penalty==='dnf';
 const effective=v=>v.ms+(v.penalty===2?2000:0);
@@ -51,6 +54,7 @@ function render(){
   (timesExpanded?solves:solves.slice(0,RECENT_COUNT)).forEach((v,i)=>{const li=document.createElement('li');const number=document.createElement('span');number.textContent=`${solves.length-i}.`;const val=document.createElement('span');val.textContent=label(v);li.append(number,val);if(v.scramble)li.classList.add('has-scramble');li.onclick=()=>{if(v.scramble)alert(v.scramble)};h.append(li)});
   if(!solves.length)h.innerHTML='<li class="empty">Your solves will appear here.</li>';
   h.classList.toggle('expanded',timesExpanded);
+  appearance.sync();
   const tog=$('historyToggle');tog.hidden=solves.length<=RECENT_COUNT;tog.textContent=timesExpanded?'Show less':'Show all';tog.setAttribute('aria-expanded',String(timesExpanded));
 }
 $('historyToggle').addEventListener('click',()=>{timesExpanded=!timesExpanded;render();if(!timesExpanded)$('history').scrollTop=0});
