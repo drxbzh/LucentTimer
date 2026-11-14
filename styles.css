@@ -46,7 +46,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--timer
 #newScramble:disabled{opacity:.5;cursor:wait}
 .scrambleActions{position:relative;display:flex;align-items:center;justify-content:center;gap:8px}
 .scrambleActions #newScramble{height:30px;padding-top:0;padding-bottom:0}
-.gearBtn{display:grid;place-items:center;flex:none;width:30px;height:30px;padding:0;border:1px solid var(--t-bc);border-radius:var(--r-btn);background:var(--btn-fill);color:var(--t-muted);cursor:pointer}
+.gearBtn{display:grid;place-items:center;flex:none;width:30px;height:30px;padding:0;border:1px solid var(--t-bc);border-radius:var(--r-icon);background:var(--btn-fill);color:var(--t-muted);cursor:pointer}
 .gearBtn:hover,.gearBtn.active,#newScramble:hover{color:var(--t-text)}
 .gearBtn.active{background:var(--t-fill2)}
 .scramblePop{position:absolute;z-index:2;top:calc(100% + 10px);left:50%;transform:translateX(-50%);width:min(300px,calc(100vw - 32px));padding:14px;text-align:left;background:var(--panel);border:1px solid var(--bc);border-radius:var(--r-card);box-shadow:0 10px 40px #0005}

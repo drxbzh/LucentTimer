@@ -17,6 +17,7 @@ body.is-running #dock,body.is-running #overview,body.is-running #dockPop{opacity
 .dockBtn{position:relative;flex:none;display:grid;place-items:center;width:34px;height:34px;padding:0;border:0;border-radius:var(--r-icon);background:var(--ctl-bg);color:var(--fg);cursor:pointer;-webkit-tap-highlight-color:transparent}
 .dockBtn:hover,.dockBtn:focus-visible{color:var(--fg-hi)}
 .dockBtn:focus-visible,.popOpt:focus-visible,.miniBtn:focus-visible,.ovHead:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.dockBtn[aria-pressed="true"],.dockBtn[aria-expanded="true"]{background:var(--accent-soft);color:var(--accent)}
 
 /* ---------- Dock pop-up (select options, or the shortcut customiser) ---------- */
 #dockPop{position:fixed;z-index:3;left:60px;top:12px;width:max-content;min-width:184px;max-width:min(320px,calc(100vw - 84px));max-height:calc(100dvh - 24px);overflow:auto;padding:6px;
@@ -66,7 +67,11 @@ body.is-running #dock,body.is-running #overview,body.is-running #dockPop{opacity
 
 /* Minimal type: the dock floats icon-only on the timer background; the Solve Overview keeps the Soft background treatment. */
 body[data-ui-type="minimal"] #dock{--fg:var(--t-muted);--fg-hi:var(--t-text);background:transparent;border-color:transparent;box-shadow:none}
+body[data-ui-type="minimal"] .dockBtn{background:transparent}
+body[data-ui-type="minimal"] .dockBtn:hover{background:var(--t-fill)}
+body[data-ui-type="minimal"] .dockBtn[aria-pressed="true"],body[data-ui-type="minimal"] .dockBtn[aria-expanded="true"]{background:transparent}
 body[data-ui-type="minimal"] .dockSep{background:var(--t-line)}
+body[data-ui-type="minimal"] .miniBtn{background:transparent}
 body[data-ui-type="minimal"] #dockPop{background:var(--panel);box-shadow:var(--float-shadow)}
 body[data-ui-type="minimal"] #overview{--bc:transparent;--ctl-bg:var(--field);--card-bg:var(--field);--btn-fill:var(--t-fill);box-shadow:0 4px 18px rgba(0,0,0,.22)}
 

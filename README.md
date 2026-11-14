@@ -63,4 +63,4 @@ The app version lives only in `version.js` (shown in Settings > About and used f
 
 ## Accent buttons
 
-Every Interface Type defines `--abtn-*` tokens from the selected accent (appearance.css) and one shared rule applies them to the buttons: Solid = accent outline and text, Soft = accent tint, Glass = solid accent fill, Minimal = accent text. Selected states (active / pressed / expanded) use a stronger fill. Delete and danger buttons stay red.
+The selected accent colour is used unmodified in every Interface Type; the type only decides how it is presented (appearance.css). Glass = solid accent fill, no border. Solid = accent fill with the existing button borders. Soft = accent fill, borderless. Minimal = accent on icons and text only (no fills or borders; the Tool Bar has no background block; selected = accent underline). Delete and danger buttons stay red. In the Hybrid style every icon-only button is circular and text buttons stay rounded rectangles.
