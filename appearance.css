@@ -12,26 +12,24 @@
 [data-ui-style="hybrid"] .stepBtn{border-radius:999px}
 
 /* ---------- Interface types: SURFACE TREATMENT ONLY (fill, border, blur). Selected with [data-ui-type] on <body> and on preview tiles. ---------- */
-[data-ui-type="solid"]{--bc:var(--line);--t-bc:var(--t-line);--bc-danger:#ff5a5a;--ctl-bg:var(--field);--card-bg:var(--field);--btn-fill:var(--t-fill)}
-[data-ui-type="soft"]{--bc:transparent;--t-bc:transparent;--bc-danger:transparent;--ctl-bg:var(--field);--card-bg:var(--field);--btn-fill:var(--t-fill)}
-[data-ui-type="minimal"]{--bc:transparent;--t-bc:transparent;--bc-danger:transparent;--ctl-bg:transparent;--card-bg:transparent;--btn-fill:transparent;--drawer-shadow:none;--float-shadow:none}
+[data-ui-type="solid"]{--bc:var(--line);--t-bc:var(--t-line);--bc-danger:#ff5a5a;--ctl-bg:var(--field);--card-bg:var(--field);--btn-fill:var(--t-fill);--abtn-bg:var(--ctl-bg);--abtn-fg:var(--accent);--abtn-bd:var(--accent);--abtn-bg-h:var(--accent-soft);--abtn-bg-on:var(--accent);--abtn-fg-on:var(--on-accent);--abtn-bd-on:var(--accent);--abtn-bg-on-h:color-mix(in srgb,var(--accent) 88%,var(--on-accent))}
+[data-ui-type="soft"]{--bc:transparent;--t-bc:transparent;--bc-danger:transparent;--ctl-bg:var(--field);--card-bg:var(--field);--btn-fill:var(--t-fill);--abtn-bg:var(--accent-soft);--abtn-fg:var(--accent);--abtn-bd:transparent;--abtn-bg-h:color-mix(in srgb,var(--accent) 32%,transparent);--abtn-bg-on:var(--accent);--abtn-fg-on:var(--on-accent);--abtn-bd-on:var(--accent);--abtn-bg-on-h:color-mix(in srgb,var(--accent) 88%,var(--on-accent))}
+[data-ui-type="minimal"]{--bc:transparent;--t-bc:transparent;--bc-danger:transparent;--ctl-bg:transparent;--card-bg:transparent;--btn-fill:transparent;--drawer-shadow:none;--float-shadow:none;--abtn-bg:transparent;--abtn-fg:var(--accent);--abtn-bd:transparent;--abtn-bg-h:var(--accent-soft);--abtn-bg-on:color-mix(in srgb,var(--accent) 30%,transparent);--abtn-fg-on:var(--accent);--abtn-bd-on:transparent;--abtn-bg-on-h:color-mix(in srgb,var(--accent) 38%,transparent)}
 /* Glass: neutral translucent surfaces. Fills are white/black alpha only; the GUI accent never tints them. */
 [data-ui-type="glass"]{--glass-panel:rgba(30,32,40,.55);--glass-block:rgba(255,255,255,.07);--glass-edge:inset 0 0 0 1px rgba(255,255,255,.09),inset 0 1px 0 rgba(255,255,255,.16);--glass-blur:blur(20px) saturate(140%);
-  --bc:transparent;--t-bc:transparent;--bc-danger:transparent;--ctl-bg:var(--glass-block);--card-bg:var(--glass-block);--btn-fill:var(--glass-block);--drawer-shadow:0 12px 40px rgba(0,0,0,.35);--float-shadow:0 6px 24px rgba(0,0,0,.32)}
+  --bc:transparent;--t-bc:transparent;--bc-danger:transparent;--ctl-bg:var(--glass-block);--card-bg:var(--glass-block);--btn-fill:var(--glass-block);--drawer-shadow:0 12px 40px rgba(0,0,0,.35);--float-shadow:0 6px 24px rgba(0,0,0,.32);--abtn-bg:var(--accent);--abtn-fg:var(--on-accent);--abtn-bd:transparent;--abtn-bg-h:color-mix(in srgb,var(--accent) 86%,var(--on-accent));--abtn-bg-on:var(--accent);--abtn-fg-on:var(--on-accent);--abtn-bd-on:transparent;--abtn-bg-on-h:color-mix(in srgb,var(--accent) 86%,var(--on-accent))}
 body.light [data-ui-type="glass"],body.light[data-ui-type="glass"]{--glass-panel:rgba(255,255,255,.58);--glass-block:rgba(0,0,0,.045);--glass-edge:inset 0 0 0 1px rgba(0,0,0,.07),inset 0 1px 0 rgba(255,255,255,.85);--drawer-shadow:0 12px 40px rgba(0,0,0,.14);--float-shadow:0 6px 24px rgba(0,0,0,.16)}
 
 /* Minimal type: ordinary elements have no blocks or borders. Form fields keep a faint underline / ring so they stay findable. */
 body[data-ui-type="minimal"] .stats div{padding-left:2px;padding-right:2px}
-body[data-ui-type="minimal"] #newScramble:hover,body[data-ui-type="minimal"] .gearBtn:hover{background:var(--t-fill)}
 body[data-ui-type="minimal"] :is(select,input[type=number],.cp-hex){box-shadow:inset 0 -1px 0 var(--line)}
 body[data-ui-type="minimal"] input[type=checkbox]:not(:checked){background:transparent;box-shadow:inset 0 0 0 1.5px var(--muted)}
 body[data-ui-type="minimal"] .seg{padding:0}
 body[data-ui-type="minimal"] .seg button[aria-checked="true"]{background:transparent;box-shadow:inset 0 -2px 0 var(--accent)}
 body[data-ui-type="minimal"] :is(.styleTile,.chip)[aria-checked="true"]{background:transparent;box-shadow:none}
 body[data-ui-type="minimal"] :is(.styleTile,.chip)[aria-checked="true"]::after{content:"✓";margin-left:auto;color:var(--accent);font-weight:700}
-body[data-ui-type="minimal"] .autoBtn.active{background:transparent}
 body[data-ui-type="minimal"] .posGrid button[aria-checked="true"]{background:transparent}
-body[data-ui-type="minimal"] .ghostBtn,body[data-ui-type="minimal"] .danger{background:transparent}
+body[data-ui-type="minimal"] .danger{background:transparent}
 
 /* Glass type */
 body[data-ui-type="glass"] .drawer,body[data-ui-type="glass"][data-fx] .drawer{background:var(--glass-panel);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--glass-edge),var(--drawer-shadow)}
@@ -42,8 +40,8 @@ body[data-ui-type="glass"] #lucentAdvMain.pushed{opacity:0}
 body[data-ui-type="glass"] #scrim{background:#0003}
 body[data-ui-type="glass"] .scramblePop,body[data-ui-type="glass"][data-fx] .scramblePop{background:var(--glass-panel);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--glass-edge),var(--float-shadow)}
 body[data-ui-type="glass"] :is(.stats div,select,input[type=number],.cp-hex,.seg,.chip,.styleTile),body[data-ui-type="glass"][data-fx] .stats div{box-shadow:var(--glass-edge)}
-/* Buttons stay solid, opaque and borderless in the GUI accent colour (glow from Visual Effects still applies via box-shadow). */
-body[data-ui-type="glass"] :is(#newScramble,.gearBtn,.stepBtn,.autoBtn,.ghostBtn,#confirm button,.seg button[aria-checked="true"],.posGrid button[aria-checked="true"]){background:var(--accent);color:var(--on-accent);border:0}
+/* Glass selected segments stay solid accent. Glass buttons get their accent fill from the shared accent-button tokens below. */
+body[data-ui-type="glass"] :is(.seg button[aria-checked="true"],.posGrid button[aria-checked="true"]){background:var(--accent);color:var(--on-accent);border:0}
 body[data-ui-type="glass"] .gearBtn.active{filter:brightness(.88)}
 body[data-ui-type="glass"] .autoBtn.active{box-shadow:inset 0 0 0 2px var(--on-accent),var(--fx-shadow,0 0 0 transparent)}
 body[data-ui-type="glass"] :is(.danger,#confirm #confirmYes){background:#ff5a5a;color:#fff;border:0}
@@ -159,3 +157,16 @@ body[data-tbg="image"] #scramble,body[data-tbg="image"] #status{text-shadow:0 0 
    and never switched by the timer background. ---------- */
 body[data-timer-fx="glow"] #time,body[data-timer-fx="glow"] .bgp-time{text-shadow:0 0 .1em currentColor,0 0 .3em currentColor;text-shadow:0 0 .1em color-mix(in srgb,currentColor 75%,transparent),0 0 .32em color-mix(in srgb,currentColor 50%,transparent)}
 body[data-timer-fx="shadow"] #time,body[data-timer-fx="shadow"] .bgp-time{text-shadow:0 .04em .07em rgba(0,0,0,.6),0 .09em .22em rgba(0,0,0,.4)}
+
+/* ---------- Accent buttons: ONE mechanism for every Interface Type ----------
+   Each type defines --abtn-* tokens (above) from the selected accent; the buttons below read them, so the accent reaches
+   Solid (accent outline + text), Soft (accent tint), Glass (solid accent fill) and Minimal (accent text) alike.
+   Normal / hover / selected (.active, aria-pressed, aria-expanded) states are all covered here. Danger/confirm-delete stay red. */
+body[data-ui-type] :is(#newScramble,.gearBtn,.stepBtn,.autoBtn,.ghostBtn,#confirm #confirmNo,.dockBtn,.miniBtn){background:var(--abtn-bg);color:var(--abtn-fg);border:1px solid var(--abtn-bd)}
+body[data-ui-type] :is(#newScramble,.gearBtn,.stepBtn,.autoBtn,.ghostBtn,#confirm #confirmNo,.dockBtn,.miniBtn):hover:not(:disabled){background:var(--abtn-bg-h);color:var(--abtn-fg)}
+/* Selected state: swap the tokens on the element, so hover and base rules above need no special cases. */
+body[data-ui-type] :is(.autoBtn.active,.gearBtn.active,.dockBtn[aria-pressed="true"],.dockBtn[aria-expanded="true"]){--abtn-bg:var(--abtn-bg-on);--abtn-bg-h:var(--abtn-bg-on-h);--abtn-fg:var(--abtn-fg-on);--abtn-bd:var(--abtn-bd-on)}
+/* Timer-zone buttons (New scramble, scramble gear) sit on the timer background, so Solid keeps their translucent fill there. */
+body[data-ui-type="solid"] .scrambleActions button{--abtn-bg:var(--btn-fill)}
+body[data-ui-type="solid"] .scrambleActions :is(.autoBtn.active,.gearBtn.active){--abtn-bg:var(--abtn-bg-on)}
+body[data-ui-type="glass"] .dockBtn{border-width:0}

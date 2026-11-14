@@ -17,7 +17,6 @@ body.is-running #dock,body.is-running #overview,body.is-running #dockPop{opacity
 .dockBtn{position:relative;flex:none;display:grid;place-items:center;width:34px;height:34px;padding:0;border:0;border-radius:var(--r-icon);background:var(--ctl-bg);color:var(--fg);cursor:pointer;-webkit-tap-highlight-color:transparent}
 .dockBtn:hover,.dockBtn:focus-visible{color:var(--fg-hi)}
 .dockBtn:focus-visible,.popOpt:focus-visible,.miniBtn:focus-visible,.ovHead:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
-.dockBtn[aria-pressed="true"],.dockBtn[aria-expanded="true"]{background:var(--accent-soft);color:var(--accent)}
 
 /* ---------- Dock pop-up (select options, or the shortcut customiser) ---------- */
 #dockPop{position:fixed;z-index:3;left:60px;top:12px;width:max-content;min-width:184px;max-width:min(320px,calc(100vw - 84px));max-height:calc(100dvh - 24px);overflow:auto;padding:6px;
@@ -67,18 +66,13 @@ body.is-running #dock,body.is-running #overview,body.is-running #dockPop{opacity
 
 /* Minimal type: the dock floats icon-only on the timer background; the Solve Overview keeps the Soft background treatment. */
 body[data-ui-type="minimal"] #dock{--fg:var(--t-muted);--fg-hi:var(--t-text);background:transparent;border-color:transparent;box-shadow:none}
-body[data-ui-type="minimal"] .dockBtn{background:transparent}
-body[data-ui-type="minimal"] .dockBtn:hover{background:var(--t-fill)}
-body[data-ui-type="minimal"] .dockBtn[aria-pressed="true"],body[data-ui-type="minimal"] .dockBtn[aria-expanded="true"]{background:transparent}
 body[data-ui-type="minimal"] .dockSep{background:var(--t-line)}
 body[data-ui-type="minimal"] #dockPop{background:var(--panel);box-shadow:var(--float-shadow)}
-body[data-ui-type="minimal"] .miniBtn{background:transparent}
 body[data-ui-type="minimal"] #overview{--bc:transparent;--ctl-bg:var(--field);--card-bg:var(--field);--btn-fill:var(--t-fill);box-shadow:0 4px 18px rgba(0,0,0,.22)}
 
 /* Glass type: neutral translucent surfaces with their own backdrop blur; buttons are solid accent. */
 body[data-ui-type="glass"] :is(#dock,#overview,#dockPop),body[data-ui-type="glass"][data-fx] :is(#dock,#overview,#dockPop){background:var(--glass-panel);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--glass-edge),var(--float-shadow)}
 body[data-ui-type="glass"] #dock{--dot:var(--on-accent)}
-body[data-ui-type="glass"] :is(.dockBtn,.miniBtn){background:var(--accent);color:var(--on-accent);border:0}
 body[data-ui-type="glass"] .dockBtn[aria-pressed="true"]::after,body[data-ui-type="glass"] .dockBtn[aria-expanded="true"]::after{content:"";position:absolute;right:5px;top:5px;width:6px;height:6px;border-radius:50%;background:var(--dot)}
 body[data-ui-type="glass"] .popOpt:hover{background:var(--glass-block)}
 body[data-ui-type="glass"] .ovHead{color:var(--muted)}
@@ -117,5 +111,3 @@ body[data-ui-type="minimal"] #toast{box-shadow:0 4px 18px rgba(0,0,0,.22)}
 body[data-ui-type="glass"] #toast{background:var(--glass-panel);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--glass-edge),var(--float-shadow)}
 @media(prefers-reduced-motion:reduce){#toast,#toast.show{transition:none}}
 
-/* Glass: keep accent-filled mini buttons legible on hover (the generic .miniBtn:hover rule would otherwise switch to the panel text colour). */
-body[data-ui-type="glass"] .miniBtn:hover:not(:disabled){color:var(--on-accent)}

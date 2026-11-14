@@ -14,7 +14,7 @@ Upload the project folder to your existing HTTPS static host. For an existing Ne
 - **Inspection:** Counts down in whole seconds. Start the solve with the same gesture as above. Starting after the countdown gives +2 (up to 2 s over) or DNF.
 - While the timer is running, a screen press also stops immediately.
 - The scramble disappears the moment you press to start the solve and returns when the timer stops.
-- **Panels:** a desktop click on the left half of the screen opens the Tool Bar; on the right half it opens the Solve Overview (click again to close). On touch, a swipe that starts on the left half opens the Tool Bar and one that starts on the right half opens the Solve Overview; swiping back toward the edge closes it. (A plain tap on touch still starts the timer.) Settings opens from the gear in the Tool Bar, or with `A`. Settings is a list of pages (Timer, Scramble, Display, Feedback, Data, About); tap one to open it, and use the back arrow or Esc to return.
+- **Panels:** a desktop click on the left half of the screen opens the Tool Bar; on the right half it opens the Solve Overview (click again to close). On touch, a swipe that starts on the left half opens the Tool Bar and one that starts on the right half opens the Solve Overview; swiping back toward the edge closes it. (A plain tap on touch still starts the timer.) Settings opens from the gear in the Tool Bar (which collapses so it stays out of the way), or with `A`. Settings is a list of pages (Timer, Scramble, Display, Feedback, Data, About); tap one to open it, and use the back arrow or Esc to return.
 - **Swipe up** (after a solve) toggles +2 on that solve, with a green line and "+2" label. **Swipe down** shows a soft red glow and asks before deleting it.
 - **Desktop keys (when idle):** `Q` shows/hides the Solve Overview tab, `A` settings, `N` new scramble, `2` toggles +2 on the last solve, `Backspace`/`Delete` deletes it (Enter/Y confirms, Esc/N cancels), `Esc` closes a drawer.
 - The layout adapts to portrait and landscape (no in-app orientation lock; it follows the phone's own rotation setting).
@@ -60,3 +60,7 @@ Serve this folder over `http://localhost` (for example, `python -m http.server 8
 ## Version
 
 The app version lives only in `version.js` (shown in Settings > About and used for the service-worker cache name). Bump it there.
+
+## Accent buttons
+
+Every Interface Type defines `--abtn-*` tokens from the selected accent (appearance.css) and one shared rule applies them to the buttons: Solid = accent outline and text, Soft = accent tint, Glass = solid accent fill, Minimal = accent text. Selected states (active / pressed / expanded) use a stronger fill. Delete and danger buttons stay red.

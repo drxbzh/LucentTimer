@@ -28,7 +28,7 @@ const save=()=>localStorage.setItem('ct-settings',JSON.stringify(settings));
 const appearance=initAppearance({settings,save});
 // Left quick-access dock (see dock.js). Shortcuts change settings through the same inputs/handlers as the Settings pages.
 function setFromDock(key,value){const el=document.getElementById(key);if(el&&(el.tagName==='SELECT'||el.type==='checkbox')){if(el.type==='checkbox')el.checked=!!value;else el.value=String(value);el.dispatchEvent(new Event('change',{bubbles:true}))}else appearance.set(key,value)}
-const dock=initDock({settings,save,setSetting:(k,v)=>{setFromDock(k,v);dock.sync()},openSettings:()=>open('advanced'),beforeOpen:()=>closeScramblePop()});
+const dock=initDock({settings,save,setSetting:(k,v)=>{setFromDock(k,v);dock.sync()},openSettings:()=>{setDock(false);open('advanced')},beforeOpen:()=>closeScramblePop()});
 // Tool Bar (the left dock): open/collapsed. Collapsed it is a small edge tab; it starts collapsed until the user opens it.
 const dockIsOpen=()=>settings.dockOpen===true;
 function applyDock(){const o=dockIsOpen(),t=$('dockToggle');$('dock').dataset.open=String(o);t.setAttribute('aria-expanded',String(o));t.setAttribute('aria-label',o?'Hide tool bar':'Show tool bar');if(!o)dock.closePop()}
