@@ -9,17 +9,17 @@ const ic = inner => `<svg viewBox="0 0 24 24" width="18" height="18" fill="none"
 const sm = inner => ic(inner).replace('width="18" height="18"', 'width="14" height="14"');
 const txt = t => ic(`<text x="12" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="currentColor" stroke="none" font-family="system-ui,sans-serif">${t}</text>`);
 
-// id === the settings key it controls. kind: 'toggle' flips directly; 'select' opens a small option list.
+// id === the settings key it controls. kind: 'toggle' flips directly (and shows a toast named by `name`); 'select' opens a small option list (no toast).
 const REG = {
   startMethod:       { label: 'Start method',       kind: 'select', icon: ic('<path d="M9 9l5.5 12 1.9-5.1L21.5 14 9 9z"/><path d="M5.2 5.2l1.6 1.6M3 11h2.2M11 3v2.2M17.8 5.2l-1.6 1.6"/>') },
-  inspectionEnabled: { label: 'Inspection',         kind: 'toggle', icon: ic('<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>') },
+  inspectionEnabled: { label: 'Inspection',         kind: 'toggle', name: 'Inspection', icon: ic('<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>') },
   inspectionLength:  { label: 'Inspection length',  kind: 'select', icon: ic('<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9.5 2.5h5"/>') },
   precision:         { label: 'Precision',          kind: 'select', icon: txt('0.0') },
-  leadingZero:       { label: 'Leading zero',       kind: 'toggle', icon: txt('0.') },
+  leadingZero:       { label: 'Leading zero',       kind: 'toggle', name: 'Leading Zero', icon: txt('0.') },
   theme:             { label: 'Appearance',         kind: 'select', icon: ic('<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/>') },
-  keepAwake:         { label: 'Keep screen awake',  kind: 'toggle', icon: ic('<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>') },
-  vibrationEnabled:  { label: 'Vibration cues',     kind: 'toggle', icon: ic('<rect x="9" y="5" width="6" height="14" rx="1.5"/><path d="M5.5 8v8M18.5 8v8M2.5 10v4M21.5 10v4"/>') },
-  soundEnabled:      { label: 'Audio cues',         kind: 'toggle', icon: ic('<path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/>') },
+  keepAwake:         { label: 'Keep screen awake',  kind: 'toggle', name: 'Keep Screen Awake', icon: ic('<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>') },
+  vibrationEnabled:  { label: 'Vibration cues',     kind: 'toggle', name: 'Vibration', icon: ic('<rect x="9" y="5" width="6" height="14" rx="1.5"/><path d="M5.5 8v8M18.5 8v8M2.5 10v4M21.5 10v4"/>') },
+  soundEnabled:      { label: 'Audio cues',         kind: 'toggle', name: 'Sound', icon: ic('<path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/>') },
   timerFont:         { label: 'Timer font',         kind: 'select', icon: txt('Aa') },
   timerWeight:       { label: 'Font weight',        kind: 'select', icon: txt('B') },
   timerEffect:       { label: 'Timer Effect',       kind: 'select', icon: ic('<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 16v4M17 18h4"/>') },
@@ -51,6 +51,16 @@ export function initDock({ settings, save, setSetting, openSettings, beforeOpen 
   const value = key => REG[key].kind === 'toggle' ? !!settings[key] : String(settings[key]);
   const valueLabel = key => REG[key].kind === 'toggle' ? (settings[key] ? 'On' : 'Off') : ((options(key).find(o => o[0] === value(key)) || [])[1] || '');
 
+  // ───── Toast: brief confirmation for one-tap ON/OFF shortcuts ─────
+  const toastEl = $('toast'); let toastTimer = 0;
+  function toast(text, on) {
+    toastEl.innerHTML = '<span class="toastDot" aria-hidden="true"></span><span class="toastText"></span>';
+    toastEl.querySelector('.toastText').textContent = text;
+    toastEl.dataset.on = String(!!on);
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => toastEl.classList.remove('show'), 1800);
+  }
+
   // ───── Dock buttons ─────
   function renderItems() {
     itemsHost.innerHTML = '';
@@ -58,7 +68,7 @@ export function initDock({ settings, save, setSetting, openSettings, beforeOpen 
       const b = document.createElement('button');
       b.type = 'button'; b.className = 'dockBtn'; b.dataset.key = key; b.innerHTML = REG[key].icon;
       b.onclick = () => {
-        if (REG[key].kind === 'toggle') { closePop(); setSetting(key, !settings[key]); }
+        if (REG[key].kind === 'toggle') { closePop(); setSetting(key, !settings[key]); toast(`${REG[key].name || REG[key].label} ${settings[key] ? 'Enabled' : 'Disabled'}`, settings[key]); }
         else popFor === key && !pop.hidden ? closePop() : openOptions(key, b);
         b.blur();
       };

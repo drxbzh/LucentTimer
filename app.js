@@ -2,7 +2,7 @@ import {initAppearance,APPEARANCE_DEFAULTS} from './appearance.js';
 import {initDock,DOCK_DEFAULT} from './dock.js';
 (()=>{
 const $=id=>document.getElementById(id);
-const defaults={startMethod:'hold',inspectionEnabled:false,inspectionLength:15,precision:2,theme:'dark',leadingZero:true,keepAwake:true,vibrationEnabled:true,soundEnabled:true,scrambleLength:0,platformMode:'auto',timerSize:100,timerFont:'roboto',timerWeight:'light',dockItems:[...DOCK_DEFAULT],overviewOpen:null,...APPEARANCE_DEFAULTS};
+const defaults={startMethod:'hold',inspectionEnabled:false,inspectionLength:15,precision:2,theme:'dark',leadingZero:true,keepAwake:true,vibrationEnabled:true,soundEnabled:true,scrambleLength:0,platformMode:'auto',timerSize:100,timerFont:'roboto',timerWeight:'light',dockItems:[...DOCK_DEFAULT],overviewOpen:null,dockOpen:false,...APPEARANCE_DEFAULTS};
 let storedSettings={};
 try{storedSettings=JSON.parse(localStorage.getItem('ct-settings')||'{}')||{}}catch{}
 let settings={...defaults,...storedSettings};
@@ -22,12 +22,18 @@ const detectPlatformMode=()=>{
 const effectivePlatformMode=()=> settings.platformMode === 'auto' ? detectPlatformMode() : settings.platformMode;
 const fmt=ms=>{let s=(Math.max(0,ms)/1000).toFixed(+settings.precision);return !settings.leadingZero&&s.startsWith('0')?s.slice(1):s};
 const show=ms=>$('time').textContent=fmt(ms);
+const APP_VERSION=self.LUCENT_VERSION||'?';$('appVersion').textContent=APP_VERSION;
 const save=()=>localStorage.setItem('ct-settings',JSON.stringify(settings));
 // Appearance (Display Settings customisation): see appearance.js. Visual only; shares the ct-settings store.
 const appearance=initAppearance({settings,save});
 // Left quick-access dock (see dock.js). Shortcuts change settings through the same inputs/handlers as the Settings pages.
 function setFromDock(key,value){const el=document.getElementById(key);if(el&&(el.tagName==='SELECT'||el.type==='checkbox')){if(el.type==='checkbox')el.checked=!!value;else el.value=String(value);el.dispatchEvent(new Event('change',{bubbles:true}))}else appearance.set(key,value)}
 const dock=initDock({settings,save,setSetting:(k,v)=>{setFromDock(k,v);dock.sync()},openSettings:()=>open('advanced'),beforeOpen:()=>closeScramblePop()});
+// Tool Bar (the left dock): open/collapsed. Collapsed it is a small edge tab; it starts collapsed until the user opens it.
+const dockIsOpen=()=>settings.dockOpen===true;
+function applyDock(){const o=dockIsOpen(),t=$('dockToggle');$('dock').dataset.open=String(o);t.setAttribute('aria-expanded',String(o));t.setAttribute('aria-label',o?'Hide tool bar':'Show tool bar');if(!o)dock.closePop()}
+function setDock(on){settings.dockOpen=!!on;save();applyDock()}
+$('dockToggle').onclick=()=>{setDock(!dockIsOpen());$('dockToggle').blur()};
 // Solve Overview tab: open/collapsed. Until the user chooses, it is open on wide screens and collapsed on narrow ones.
 const overviewIsOpen=()=>typeof settings.overviewOpen==='boolean'?settings.overviewOpen:window.innerWidth>=700;
 function applyOverview(){const o=overviewIsOpen(),t=$('overviewToggle');$('overview').dataset.open=String(o);t.setAttribute('aria-expanded',String(o));t.setAttribute('aria-label',o?'Hide solve overview':'Show solve overview')}
@@ -64,7 +70,7 @@ function render(){
   (timesExpanded?solves:solves.slice(0,RECENT_COUNT)).forEach((v,i)=>{const li=document.createElement('li');const number=document.createElement('span');number.textContent=`${solves.length-i}.`;const val=document.createElement('span');val.textContent=label(v);li.append(number,val);if(v.scramble)li.classList.add('has-scramble');li.onclick=()=>{if(v.scramble)alert(v.scramble)};h.append(li)});
   if(!solves.length)h.innerHTML='<li class="empty">Your solves will appear here.</li>';
   h.classList.toggle('expanded',timesExpanded);
-  appearance.sync();dock.sync();applyOverview();
+  appearance.sync();dock.sync();applyDock();applyOverview();
   const tog=$('historyToggle');tog.hidden=solves.length<=RECENT_COUNT;tog.textContent=timesExpanded?'Show less':'Show all';tog.setAttribute('aria-expanded',String(timesExpanded));
 }
 $('historyToggle').addEventListener('click',()=>{timesExpanded=!timesExpanded;render();if(!timesExpanded)$('history').scrollTop=0});
@@ -193,7 +199,7 @@ document.addEventListener('pointerdown',e=>{
   }
   e.preventDefault();
   e.stopImmediatePropagation();
-  if(e.clientX<window.innerWidth/2)open('advanced');else setOverview(!overviewIsOpen());
+  if(e.clientX<window.innerWidth/2)setDock(!dockIsOpen());else setOverview(!overviewIsOpen());
 },true);
 
 document.addEventListener('pointerdown',e=>{
@@ -214,7 +220,13 @@ document.addEventListener('pointermove',e=>{
 document.addEventListener('pointerup',e=>{
   if(!press||press.source!=='pointer'||press.id!==e.pointerId)return;
   const p=press,dx=e.clientX-p.x,dy=e.clientY-p.y;
-  if((effectivePlatformMode()==='mobile'||e.pointerType==='touch')&&Math.abs(dx)>SWIPE&&Math.abs(dx)>Math.abs(dy)*1.25){pressEnd(true);if(dx<0)setOverview(true);else open('advanced');return}
+  if((effectivePlatformMode()==='mobile'||e.pointerType==='touch')&&Math.abs(dx)>SWIPE&&Math.abs(dx)>Math.abs(dy)*1.25){pressEnd(true);
+    // Swipe zones: a swipe that starts on the LEFT half opens the Tool Bar, one that starts on the RIGHT half opens Solve Overview.
+    // A swipe back toward the edge closes the panel that is already open.
+    const fromLeft=p.x<window.innerWidth/2;
+    if(dx>0){if(fromLeft)setDock(true);else if(overviewIsOpen())setOverview(false)}
+    else{if(!fromLeft)setOverview(true);else if(dockIsOpen())setDock(false)}
+    return}
   if(Math.abs(dy)>SWIPE&&Math.abs(dy)>Math.abs(dx)*1.25){if(state==='idle'&&resultShown)commitSwipe(p,dy<0?'up':'down');pressEnd(true);return}
   pressEnd(false);
 },true);

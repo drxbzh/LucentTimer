@@ -85,3 +85,37 @@ body[data-ui-type="glass"] .ovHead{color:var(--muted)}
 body[data-ui-type="glass"] #overview .stats div,body[data-ui-type="glass"] #overview select{box-shadow:var(--glass-edge)}
 
 @media(max-height:420px){#dock{gap:2px;padding:3px}.dockBtn{width:30px;height:30px}}
+
+/* ---------- Tool Bar fold button / collapsed edge tab (mirrors the Solve Overview tab) ---------- */
+.dockFold{flex:none;display:grid;place-items:center;width:34px;height:20px;padding:0;border:0;border-radius:var(--r-icon);background:transparent;color:var(--fg);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.dockFold:hover,.dockFold:focus-visible{color:var(--fg-hi)}
+.dockFold:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.dockFold svg{transition:transform .15s}
+#dock[data-open="false"]{left:0;gap:0;padding:0 0 0 env(safe-area-inset-left);width:calc(26px + env(safe-area-inset-left));border-left:0;border-radius:0 calc(var(--r-card) * 1.25) calc(var(--r-card) * 1.25) 0}
+#dock[data-open="false"]>:not(#dockToggle){display:none}
+#dock[data-open="false"] .dockFold{width:100%;height:64px;padding-right:4px;border-radius:0}
+#dock[data-open="false"] .dockFold svg{transform:rotate(180deg)}
+
+/* ---------- Solve Overview: Start & Inspection dropdown (collapsed by default) ---------- */
+.ovControls{display:block;padding-top:0}
+.ovControls>summary{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;font-size:.78rem;color:var(--muted);cursor:pointer;list-style:none;-webkit-tap-highlight-color:transparent}
+.ovControls>summary::-webkit-details-marker{display:none}
+.ovControls>summary:hover{color:var(--text)}
+.ovControls>summary:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.ovControls>summary i{font-style:normal;font-size:1.2rem;line-height:1;transition:transform .15s}
+.ovControls[open]>summary i{transform:rotate(90deg)}
+.ovMoreBody{display:flex;flex-direction:column;gap:2px;padding-bottom:2px}
+
+/* ---------- Toast: temporary confirmation for one-tap ON/OFF shortcuts ---------- */
+#toast{position:fixed;z-index:6;left:50%;bottom:calc(28px + env(safe-area-inset-bottom));max-width:calc(100vw - 32px);transform:translate(-50%,8px);display:flex;align-items:center;gap:10px;padding:10px 16px;
+  background:var(--panel);color:var(--text);border:1px solid var(--bc);border-radius:var(--r-card);box-shadow:var(--float-shadow);font-size:.86rem;font-weight:600;white-space:nowrap;
+  opacity:0;visibility:hidden;pointer-events:none;transition:opacity .18s ease,transform .18s ease,visibility 0s .18s}
+#toast.show{opacity:1;visibility:visible;transform:translate(-50%,0);transition:opacity .18s ease,transform .18s ease}
+.toastDot{flex:none;width:8px;height:8px;border-radius:50%;background:var(--muted)}
+#toast[data-on="true"] .toastDot{background:var(--accent)}
+body[data-ui-type="minimal"] #toast{box-shadow:0 4px 18px rgba(0,0,0,.22)}
+body[data-ui-type="glass"] #toast{background:var(--glass-panel);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--glass-edge),var(--float-shadow)}
+@media(prefers-reduced-motion:reduce){#toast,#toast.show{transition:none}}
+
+/* Glass: keep accent-filled mini buttons legible on hover (the generic .miniBtn:hover rule would otherwise switch to the panel text colour). */
+body[data-ui-type="glass"] .miniBtn:hover:not(:disabled){color:var(--on-accent)}

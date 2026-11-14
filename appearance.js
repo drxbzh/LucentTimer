@@ -73,7 +73,10 @@ const toHex = a => '#' + a.map(v => Math.round(Math.max(0, Math.min(255, v))).to
 const mix = (a, b, t) => { const A = toRgb(a), B = toRgb(b); return toHex(A.map((v, i) => v + (B[i] - v) * t)); };
 const lum = h => { const [r, g, b] = toRgb(h).map(v => { v /= 255; return v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; }); return .2126 * r + .7152 * g + .0722 * b; };
 const rgba = (h, a) => { const [r, g, b] = toRgb(h); return `rgba(${r},${g},${b},${a})`; };
-const onColor = h => lum(h) > .42 ? '#111218' : '#ffffff';
+// Text/icon colour for anything filled with the accent: whichever of near-black or white has the higher WCAG contrast.
+// (The old fixed luminance cut-off gave white-on-light-blue, ~2.5:1, for the default Midnight accent.)
+const contrast = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + .05) / (Math.min(x, y) + .05); };
+const onColor = h => contrast(h, '#111218') >= contrast(h, '#ffffff') ? '#111218' : '#ffffff';
 function rgb2hsv([r, g, b]) {
   r /= 255; g /= 255; b /= 255;
   const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
@@ -126,6 +129,7 @@ export function sanitize(s) {
   const clean = (o, d) => { if (!o || typeof o !== 'object') return { ...d }; const a = normHex(o.accent), b = normHex(o.surface), t = normHex(o.text); return a && b ? (t ? { accent: a, surface: b, text: t } : { accent: a, surface: b }) : { ...d }; };
   s.guiColors = { dark: clean(gc.dark, D.guiColors.dark), light: clean(gc.light, D.guiColors.light) };
   s.overviewOpen = typeof s.overviewOpen === 'boolean' ? s.overviewOpen : null;
+  s.dockOpen = s.dockOpen === true;   // Tool Bar open/collapsed; collapsed by default
   s.glowLevel = clampInt(s.glowLevel, 0, 4, D.glowLevel);
   s.shadowEnabled = s.shadowEnabled === true;
   s.shadowIntensity = clampInt(s.shadowIntensity, 5, 100, D.shadowIntensity);
