@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="appearance.css">
 <link rel="stylesheet" href="dock.css">
+<link rel="stylesheet" href="library.css">
 </head>
 <body data-ui-type="solid" data-ui-style="rounded">
 <main id="screen">
@@ -20,6 +21,9 @@
       <button id="newScramble" type="button">New scramble</button>
       <button id="scrambleGear" class="gearBtn" type="button" aria-label="Scramble settings" aria-haspopup="dialog" aria-expanded="false" aria-controls="scramblePop"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
       <div id="scramblePop" class="scramblePop" role="dialog" aria-label="Scramble settings" data-ui-control hidden>
+        <div class="popLabel">Puzzle</div>
+        <label class="puzzleRow"><select id="puzzleSelect" class="puzzleSelect" aria-label="Puzzle"></select></label>
+        <div class="popSep" aria-hidden="true"></div>
         <div class="popLabel">Scramble length</div>
         <div class="lenRow">
           <button id="scrambleLenDown" class="stepBtn" type="button" aria-label="Decrease scramble length">−</button>
@@ -27,7 +31,7 @@
           <button id="scrambleLenUp" class="stepBtn" type="button" aria-label="Increase scramble length">+</button>
           <button id="scrambleAuto" class="autoBtn" type="button" aria-pressed="true">Auto</button>
         </div>
-        <p class="popHint">Auto uses official scrambles. A number uses that many random moves.</p>
+        <p class="popHint" id="scrambleHint">Auto uses official scrambles. A number uses that many random moves.</p>
       </div>
     </div>
   </div>
@@ -75,6 +79,7 @@
     <nav>
       <button class="navrow" data-go="advTimer"><span>Timer</span><i>›</i></button>
       <button class="navrow" data-go="advScramble"><span>Scramble</span><i>›</i></button>
+      <button class="navrow" data-go="advLibrary"><span>Scramble Library</span><i>›</i></button>
       <button class="navrow" data-go="advDisplay"><span>Display</span><i>›</i></button>
       <button class="navrow" data-go="advFeedback"><span>Feedback</span><i>›</i></button>
       <button class="navrow" data-go="advData"><span>Data</span><i>›</i></button>
@@ -99,8 +104,43 @@
   <div class="lt-adv-page sub" id="advScramble">
     <header><div class="titlebar"><button data-back aria-label="Back">‹</button><h1>Scramble</h1></div><button data-close aria-label="Close">×</button></header>
     <section>
+      <label>Puzzle<select id="puzzleSelectSettings" class="puzzleSelect"></select></label>
+    </section>
+    <section>
       <label>Scramble length<input id="scrambleLength" type="number" inputmode="numeric" min="1" max="200" step="1" placeholder="Auto"></label>
-      <p class="hint">Leave empty for official random-state scrambles (about 20 moves). Enter a number to use that many random moves. Custom lengths work offline.</p>
+      <p class="hint" id="scrambleLenHint">Leave empty for official random-state scrambles (about 20 moves). Enter a number to use that many random moves. Custom lengths work offline.</p>
+    </section>
+  </div>
+  <div class="lt-adv-page sub" id="advLibrary">
+    <header><div class="titlebar"><button data-back aria-label="Back">‹</button><h1>Scramble Library</h1></div><button data-close aria-label="Close">×</button></header>
+    <section>
+      <div class="libTop"><b id="libCount">0 / 10,000</b><span id="libStatus" class="libStatus" data-s="idle">Idle</span></div>
+      <div id="libBar" class="libBar" role="progressbar" aria-label="Library capacity used" aria-valuemin="0" aria-valuemax="10000" aria-valuenow="0"><i id="libBarFill"></i></div>
+      <p class="hint" id="libDetail"></p>
+      <p class="msg" id="libError" role="status" hidden></p>
+      <p class="msg" id="libGen" role="status" hidden></p>
+    </section>
+    <section>
+      <label>Build automatically<input id="libAuto" type="checkbox"></label>
+      <label>Pause all generation<input id="libPause" type="checkbox"></label>
+      <p class="hint">Saved scrambles are used when you are offline. While online, scrambles are generated quietly in the background, never while you are solving. Used scrambles are kept but never shown again. Pausing stops both automatic and manual generation.</p>
+    </section>
+    <section>
+      <div class="libBtns"><button id="libBuild" class="ghostBtn" type="button">Build remaining library</button><button id="libCancel" class="ghostBtn" type="button" hidden>Cancel</button></div>
+      <div id="libManual" hidden><div class="libBar"><i id="libManualFill"></i></div><div id="libManualText"></div></div>
+      <p class="msg" id="libManualMsg" aria-live="polite"></p>
+      <p class="hint">Fills the remaining space, up to 10,000 scrambles in total, starting with the puzzle you are using.</p>
+    </section>
+    <section>
+      <h2>Saved per puzzle</h2>
+      <ol id="libPer" class="libPer"></ol>
+    </section>
+    <section>
+      <label>Offline library<button id="libDelete" class="danger" type="button">Delete…</button></label>
+      <div id="libConfirm" class="libConfirm" role="alertdialog" aria-label="Delete the offline scramble library" hidden>
+        <p>Delete every saved scramble and its used/unused record? Your solves and settings are not affected. Automatic building will be turned off until you turn it on again.</p>
+        <div class="libBtns"><button id="libDeleteYes" class="danger" type="button">Delete library</button><button id="libDeleteNo" class="ghostBtn" type="button">Cancel</button></div>
+      </div>
     </section>
   </div>
   <div class="lt-adv-page sub" id="advDisplay">
@@ -191,8 +231,8 @@
   <div class="lt-adv-page sub" id="advData">
     <header><div class="titlebar"><button data-back aria-label="Back">‹</button><h1>Data</h1></div><button data-close aria-label="Close">×</button></header>
     <section>
-      <label>Saved solves<button id="clear" class="danger" type="button">Clear all</button></label>
-      <p class="hint">Settings and solves are stored on this device only.</p>
+      <label><span id="clearLabel">Saved solves</span><button id="clear" class="danger" type="button">Clear all</button></label>
+      <p class="hint">Settings and solves are stored on this device only. Each puzzle has its own solve history; Clear all only clears the puzzle you are using.</p>
     </section>
   </div>
   <div class="lt-adv-page sub" id="advAbout">

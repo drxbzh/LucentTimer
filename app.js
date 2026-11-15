@@ -1,15 +1,28 @@
 import {initAppearance,APPEARANCE_DEFAULTS} from './appearance.js';
 import {initDock,DOCK_DEFAULT} from './dock.js';
+import {PUZZLES,PUZZLE_IDS,DEFAULT_PUZZLE,isPuzzle,puzzleName} from './puzzles.js';
+import {freshScramble} from './generators.js';
+import * as Library from './scrambleLibrary.js';
+import {initLibraryUI} from './libraryUI.js';
 (()=>{
 const $=id=>document.getElementById(id);
-const defaults={startMethod:'hold',inspectionEnabled:false,inspectionLength:15,precision:2,theme:'dark',leadingZero:true,keepAwake:true,vibrationEnabled:true,soundEnabled:true,scrambleLength:0,platformMode:'auto',timerSize:100,timerFont:'roboto',timerWeight:'light',dockItems:[...DOCK_DEFAULT],overviewOpen:null,dockOpen:false,...APPEARANCE_DEFAULTS};
+const defaults={startMethod:'hold',inspectionEnabled:false,inspectionLength:15,precision:2,theme:'dark',leadingZero:true,keepAwake:true,vibrationEnabled:true,soundEnabled:true,scrambleLength:0,platformMode:'auto',puzzle:DEFAULT_PUZZLE,timerSize:100,timerFont:'roboto',timerWeight:'light',dockItems:[...DOCK_DEFAULT],overviewOpen:null,dockOpen:false,...APPEARANCE_DEFAULTS};
 let storedSettings={};
 try{storedSettings=JSON.parse(localStorage.getItem('ct-settings')||'{}')||{}}catch{}
 let settings={...defaults,...storedSettings};
-let storedSolves=[];
-try{storedSolves=JSON.parse(localStorage.getItem('ct-solves')||'[]')||[]}catch{}
-// Solve model: {ms, scramble, penalty: 0 | 2 | 'dnf'}
-let solves=storedSolves.map(v=>typeof v==='number'?{ms:v,scramble:'',penalty:0}:{penalty:0,...v}).filter(v=>v&&Number.isFinite(v.ms));
+if(!isPuzzle(settings.puzzle))settings.puzzle=DEFAULT_PUZZLE;
+// Solve model: {ms, scramble, penalty: 0 | 2 | 'dnf', puzzle}. Each puzzle has its own list, stored together under 'ct-solves-v2'
+// as {v:2,by:{puzzleId:[...]}}. Migration: the original single list ('ct-solves') becomes the 3x3 list the first time. The old key
+// is never modified or deleted, so nothing can be lost by the migration (it is simply no longer written to).
+const SOLVES_KEY='ct-solves-v2';
+const normSolves=(arr,puzzle)=>(Array.isArray(arr)?arr:[]).map(v=>typeof v==='number'?{ms:v,scramble:'',penalty:0}:{penalty:0,...v}).filter(v=>v&&Number.isFinite(v.ms)).map(v=>({...v,puzzle}));
+let solvesByPuzzle={},v2Loaded=false;
+try{
+  const raw=JSON.parse(localStorage.getItem(SOLVES_KEY)||'null');
+  if(raw&&raw.v===2&&raw.by&&typeof raw.by==='object'){for(const p of PUZZLE_IDS)if(Array.isArray(raw.by[p]))solvesByPuzzle[p]=normSolves(raw.by[p],p);v2Loaded=true}
+}catch{}
+if(!v2Loaded){let old=[];try{old=JSON.parse(localStorage.getItem('ct-solves')||'[]')||[]}catch{}solvesByPuzzle={'333':normSolves(old,'333')}}
+let solves=solvesByPuzzle[settings.puzzle]||(solvesByPuzzle[settings.puzzle]=[]);
 // state: idle | inspection | running. Finger/key contact is tracked separately in `press`.
 let state='idle',resultShown=false,start=0,inspectionStart=0,raf=0,press=null,wake=null,pendingPenalty=0;
 let currentScramble='',scrambleModule=null,scrambleBusy=false,audioContext=null,inspectionCues=new Set();
@@ -40,10 +53,11 @@ function applyOverview(){const o=overviewIsOpen(),t=$('overviewToggle');$('overv
 function setOverview(on){settings.overviewOpen=!!on;save();applyOverview()}
 $('overviewToggle').onclick=()=>{setOverview(!overviewIsOpen());$('overviewToggle').blur()};
 addEventListener('resize',applyOverview);
-const saveSolves=()=>localStorage.setItem('ct-solves',JSON.stringify(solves));
+const saveSolves=()=>{solvesByPuzzle[settings.puzzle]=solves;localStorage.setItem(SOLVES_KEY,JSON.stringify({v:2,by:solvesByPuzzle}))};
 const isDnf=v=>v.penalty==='dnf';
 const effective=v=>v.ms+(v.penalty===2?2000:0);
 const label=v=>isDnf(v)?'DNF':fmt(effective(v))+(v.penalty===2?'+':'');
+const LEN_HINT_POP=$('scrambleHint').textContent,LEN_HINT_SET=$('scrambleLenHint').textContent;
 const RECENT_COUNT=5;let timesExpanded=false;
 // Session totals (solve count / best / mean). No longer shown in the UI, kept for any feature that needs them.
 const sessionStats=()=>{const valid=solves.filter(v=>!isDnf(v)).map(effective);return{count:solves.length,best:valid.length?Math.min(...valid):null,mean:valid.length?valid.reduce((a,b)=>a+b,0)/valid.length:null}};
@@ -64,6 +78,15 @@ function render(){
   $('startMethod').value=settings.startMethod;$('inspectionEnabled').checked=settings.inspectionEnabled;$('inspectionLength').value=settings.inspectionLength;$('precision').value=settings.precision;
   $('leadingZero').checked=settings.leadingZero;$('theme').value=settings.theme;$('keepAwake').checked=settings.keepAwake;$('soundEnabled').checked=settings.soundEnabled;$('vibrationEnabled').checked=settings.vibrationEnabled;$('scrambleLength').value=settings.scrambleLength||'';
   const sl=Math.floor(+settings.scrambleLength)||0;$('scrambleLengthQuick').value=sl||'';$('scrambleAuto').classList.toggle('active',!sl);$('scrambleAuto').setAttribute('aria-pressed',String(!sl));$('scrambleLenDown').disabled=sl>0&&sl<=1;$('scrambleLenUp').disabled=sl>=200;
+  // Puzzle selector and the 3x3-only custom length
+  const is3=settings.puzzle==='333',pName=puzzleName(settings.puzzle);
+  document.querySelectorAll('.puzzleSelect').forEach(el=>{el.value=settings.puzzle});
+  ['scrambleLength','scrambleLengthQuick','scrambleAuto'].forEach(id=>{$(id).disabled=!is3});
+  if(!is3){$('scrambleLenDown').disabled=true;$('scrambleLenUp').disabled=true}
+  $('scrambleHint').textContent=is3?LEN_HINT_POP:`Custom length is only available for 3×3. ${pName} uses its standard scramble.`;
+  $('scrambleLenHint').textContent=is3?LEN_HINT_SET:`Custom length is only available for 3×3. ${pName} uses its standard scramble, so this setting is disabled.`;
+  $('clearLabel').textContent=`Saved solves (${pName})`;
+  document.querySelector('#overviewToggle .ovTitle').textContent='Solves · '+pName;
   // Session overview: Ao5 / Ao12 plus recorded times (newest first; 5 by default, all when expanded).
   $('ao5').textContent=fmtAo(averageOf(5));$('ao12').textContent=fmtAo(averageOf(12));
   const h=$('history');h.innerHTML='';
@@ -112,7 +135,7 @@ function cancelInspection(){if(state!=='inspection')return;cancelAnimationFrame(
 function begin(){if(state!=='idle')return;unlockAudio();if(settings.inspectionEnabled)beginInspection();else run()}
 function stop(){
   if(state!=='running')return;
-  const result=performance.now()-start,solve={ms:result,scramble:currentScramble,penalty:pendingPenalty};
+  const result=performance.now()-start,solve={ms:result,scramble:currentScramble,penalty:pendingPenalty,puzzle:settings.puzzle};
   state='idle';document.body.classList.remove('is-running');resultShown=true;setScrambleHidden(false);cancelAnimationFrame(raf);setPressed(false);
   if(isDnf(solve)){$('time').textContent='DNF';setStatus(fmt(result))}else $('time').textContent=label(solve);
   solves.unshift(solve);solves=solves.slice(0,500);saveSolves();render();generateScramble();
@@ -279,14 +302,44 @@ const scramblePopOpen=()=>!$('scramblePop').hidden;
 function setScramblePop(on){$('scramblePop').hidden=!on;$('scrambleGear').setAttribute('aria-expanded',String(!!on));$('scrambleGear').classList.toggle('active',!!on)}
 function closeScramblePop(){if(scramblePopOpen())setScramblePop(false)}
 function showScramble(text){currentScramble=text;$('scramble').textContent=text;$('scramble').classList.remove('scramble-error')}
-async function generateScramble(){
-  const custom=scrambleOptions().length;
-  if(custom>0){showScramble(randomMoveScramble(Math.min(custom,200)));return}
-  if(scrambleBusy)return;scrambleBusy=true;$('newScramble').disabled=true;$('scramble').textContent='Generating scramble…';
-  try{scrambleModule ||= await import('https://cdn.cubing.net/v0/js/cubing/scramble');const alg=await scrambleModule.randomScrambleForEvent('333');showScramble(alg.toString())}
-  catch(err){$('scramble').textContent='Could not generate a scramble. Check your connection and try again.';$('scramble').classList.add('scramble-error');currentScramble=''}
-  finally{scrambleBusy=false;$('newScramble').disabled=false}
+// Scramble delivery. Online: a fresh scramble from the online generator is shown first, and only afterwards recorded in the
+// offline library (as used) and used to trigger background top-ups. Offline (or if the online generator fails): the next unused
+// saved scramble for this puzzle, marked used in the same database transaction. Custom length (3x3 only) is local and never stored.
+let scrambleToken=0;
+const libReady=Library.init({isBusy:()=>state!=='idle'||!!press,selected:settings.puzzle}).catch(()=>{});
+async function generateScramble(force){
+  const puzzle=settings.puzzle,name=puzzleName(puzzle);
+  const custom=puzzle==='333'?scrambleOptions().length:0;
+  if(custom>0){scrambleToken++;scrambleBusy=false;$('newScramble').disabled=false;showScramble(randomMoveScramble(Math.min(custom,200)));return}
+  if(scrambleBusy&&!force)return;
+  const token=++scrambleToken;scrambleBusy=true;$('newScramble').disabled=true;$('scramble').textContent='Generating scramble…';$('scramble').classList.remove('scramble-error');currentScramble='';
+  Library.fgPending(1);
+  try{
+    let text=null,err=null;
+    if(navigator.onLine!==false){try{text=await freshScramble(puzzle)}catch(e){err=e}}
+    if(token!==scrambleToken)return;
+    if(text){showScramble(text);libReady.then(()=>Library.noteFresh(puzzle,text));return}
+    await libReady;if(token!==scrambleToken)return;
+    const saved=await Library.takeUnused(puzzle);
+    if(token!==scrambleToken)return;
+    if(saved){showScramble(saved);return}
+    const snap=Library.getSnapshot(),offline=navigator.onLine===false||(err&&err.code==='network');
+    $('scramble').textContent=snap.error&&/not available/.test(snap.error)?'Offline scrambles are not available in this browser. Connect to the internet to get a scramble.'
+      :offline?`No unused saved ${name} scrambles left. Connect to the internet to get new ones.`:`Could not generate a ${name} scramble. Check your connection and try again.`;
+    $('scramble').classList.add('scramble-error');currentScramble='';
+  }finally{Library.fgPending(-1);if(token===scrambleToken){scrambleBusy=false;$('newScramble').disabled=false}}
 }
+function setPuzzle(id){
+  if(!isPuzzle(id)||id===settings.puzzle)return;
+  if(state!=='idle'){render();return}
+  solvesByPuzzle[settings.puzzle]=solves;settings.puzzle=id;solves=solvesByPuzzle[id]||(solvesByPuzzle[id]=[]);
+  resultShown=false;timesExpanded=false;cancelDelete();setStatus('');show(0);save();Library.setSelected(id);render();generateScramble(true);
+}
+document.querySelectorAll('.puzzleSelect').forEach(sel=>{
+  sel.innerHTML=PUZZLES.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  // blur after choosing so keyboard shortcuts (Space, N, ...) keep working: the key handler ignores keys while a select has focus
+  sel.addEventListener('change',e=>{setPuzzle(e.target.value);e.target.blur()});
+});
 $('newScramble').addEventListener('click',()=>{generateScramble();$('newScramble').blur()});
 function bind(id,key,conv=v=>v){$(id).addEventListener('change',e=>{settings[key]=conv(e.target.type==='checkbox'?e.target.checked:e.target.value);save();render();if(state==='idle'){if(resultShown&&solves.length){$('time').textContent=label(solves[0])}else show(0)}})}
 $('platformMode').addEventListener('change',e=>{settings.platformMode=e.target.value;save();render();});
@@ -305,7 +358,7 @@ $('scrambleLenUp').addEventListener('click',()=>stepScrambleLength(1));
 $('scrambleAuto').addEventListener('click',()=>setScrambleLength(0));
 $('scrambleGear').addEventListener('click',()=>{setScramblePop(!scramblePopOpen());$('scrambleGear').blur()});
 $('inspectionLength').onchange=e=>{settings.inspectionLength=+e.target.value;save();render()};
-$('clear').onclick=()=>{if(confirm('Clear all saved solves?')){solves=[];saveSolves();resultShown=false;show(0);setStatus('');render()}};
+$('clear').onclick=()=>{if(confirm(`Clear all saved ${puzzleName(settings.puzzle)} solves?`)){solves=[];saveSolves();resultShown=false;show(0);setStatus('');render()}};
 async function applyWake(){
   try{
     if(settings.keepAwake&&navigator.wakeLock&&document.visibilityState==='visible'){if(!wake||wake.released)wake=await navigator.wakeLock.request('screen')}
@@ -314,6 +367,6 @@ async function applyWake(){
 }
 $('keepAwake').addEventListener('change',e=>{settings.keepAwake=e.target.checked;save();applyWake()});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')applyWake()});
-render();show(0);generateScramble();applyWake();
+render();show(0);generateScramble();applyWake();initLibraryUI();
 if('serviceWorker'in navigator&&location.protocol.startsWith('http'))addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 })();

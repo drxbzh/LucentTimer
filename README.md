@@ -24,7 +24,9 @@ Upload the project folder to your existing HTTPS static host. For an existing Ne
 
 - Main-display inspection countdown with brief audio/haptic warnings.
 - Optional vibration and audio cues.
-- 3x3 random-state scrambles (or a custom length from 1 to 200 random moves, set in Settings; custom lengths work offline), manual refresh, and scramble saved with each solve.
+- All 11 WCA puzzles (2×2 to 7×7, Clock, Megaminx, Pyraminx, Skewb, Square-1), chosen with the Puzzle dropdown in the scramble gear popover (or Settings → Scramble). Each puzzle has its own solve history, Ao5/Ao12 and stats. Existing solves were migrated to 3×3 (the old `ct-solves` key is left untouched).
+- Scrambles come from cubing.js (MPL-2.0, used unmodified; scramble algorithms by Chen Shuang, Lucas Garron, Tom Rokicki and others; loaded from cdn.cubing.net). A custom length (1 to 200 random moves) is 3×3 only and works offline; it never touches the library.
+- Offline scramble library (Settings → Scramble Library): scrambles shown online are saved as used, extra ones are generated quietly in the background (never while solving) and saved unused, so they can be served offline. Hard limit 10,000 records in total; nothing is ever deleted automatically and used scrambles are never shown again. Controls: automatic building, pause, "Build remaining library" (with cancel) and delete (with confirmation; also turns automatic building off). Stored in its own IndexedDB database `lucent-scramble-library`.
 - Recent solves, best, mean, dark/light appearance, precision, and screen wake lock (on by default).
 
 ## Appearance customisation (Settings → Display)

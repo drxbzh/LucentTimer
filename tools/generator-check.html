@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lucent Timer: real generator check</title>
+<style>
+body{font:14px/1.5 system-ui,sans-serif;margin:0;padding:20px;background:#12131a;color:#e8e9ef;max-width:1100px}
+h1{font-size:1.2rem;margin:0 0 6px}p{color:#9a9db0;margin:6px 0 14px}
+button,input{font:inherit;padding:8px 14px;border-radius:8px;border:1px solid #3a3d52;background:#1d1f2b;color:#e8e9ef}
+button{cursor:pointer;background:#3b5bdb;border-color:#3b5bdb}button:disabled{opacity:.5}
+table{border-collapse:collapse;width:100%;margin-top:14px;font-size:12.5px}th,td{border-bottom:1px solid #2a2c3c;padding:6px 8px;text-align:left;vertical-align:top}
+.ok{color:#51cf66}.bad{color:#ff6b6b}.warn{color:#fcc419}code,pre{font:12px ui-monospace,monospace}
+pre{background:#0c0d12;padding:12px;border-radius:8px;overflow:auto;max-height:260px;white-space:pre-wrap;word-break:break-all}
+#sample{max-width:340px;word-break:break-word;color:#9a9db0}
+</style></head><body>
+<h1>Lucent Timer: real cubing.js generator check</h1>
+<p>Loads the real cubing.js scramble module from the CDN (same URL the timer uses), then for each of the 11 event IDs generates several real scrambles, times them, validates the notation, and watches the main thread. Needs an internet connection. Nothing here touches your timer data.</p>
+<label>Scrambles per event <input id="n" type="number" min="2" max="50" value="8" style="width:70px"></label>
+<button id="go">Run check</button> <button id="copy" disabled>Copy JSON result</button>
+<p id="status"></p>
+<table id="t"><thead><tr><th>Event</th><th>Accepted</th><th>First call</th><th>Next calls (mean / max)</th><th>Length (chars / moves)</th><th>Notation</th><th>Main-thread stall</th><th>Sample / errors</th></tr></thead><tbody></tbody></table>
+<h3>Module information</h3><pre id="info">(not run yet)</pre>
+<script type="module">
+import {validate} from './validators.mjs';
+const URL_='https://cdn.cubing.net/v0/js/cubing/scramble';
+const IDS=['222','333','444','555','666','777','clock','minx','pyram','skewb','sq1'];
+const $=id=>document.getElementById(id);let result=null;
+let long=[],gap=0,last=0,probing=false;
+try{new PerformanceObserver(l=>{if(probing)for(const e of l.getEntries())long.push(Math.round(e.duration))}).observe({entryTypes:['longtask']})}catch{}
+(function f(t){if(probing&&last)gap=Math.max(gap,t-last);last=t;requestAnimationFrame(f)})(0);
+const mean=a=>a.reduce((x,y)=>x+y,0)/(a.length||1);
+$('go').onclick=async()=>{
+  $('go').disabled=true;$('copy').disabled=true;const N=Math.max(2,Math.min(50,+$('n').value||8));
+  const tb=$('t').tBodies[0];tb.innerHTML='';result={when:new Date().toISOString(),userAgent:navigator.userAgent,url:URL_,perEvent:N,events:{}};
+  let mod;$('status').textContent='Loading cubing.js scramble module…';
+  try{mod=await import(URL_)}catch(e){$('status').innerHTML='<span class="bad">Could not load the module: '+e.message+'</span>';$('go').disabled=false;return}
+  result.moduleExports=Object.keys(mod);
+  let info='scramble module exports: '+Object.keys(mod).join(', ')+'\n';
+  try{const pz=await import('https://cdn.cubing.net/v0/js/cubing/puzzles');info+='puzzles module exports: '+Object.keys(pz).join(', ')+'\n';
+    if(pz.wcaEvents){const ev=await (typeof pz.wcaEvents==='function'?pz.wcaEvents():pz.wcaEvents);result.wcaEvents=[...ev];info+='wcaEvents: '+[...ev].join(', ')+'\n'}}catch(e){info+='(puzzles module not readable: '+e.message+')\n'}
+  $('info').textContent=info;
+  for(const id of IDS){
+    $('status').textContent='Testing '+id+'…';
+    const row={accepted:false,times:[],lengths:[],moves:[],errors:[],invalid:[],samples:[]};long=[];gap=0;last=0;probing=true;
+    for(let i=0;i<N;i++){
+      const t0=performance.now();
+      try{const a=await mod.randomScrambleForEvent(id);const ms=performance.now()-t0;const s=String(a&&a.toString?a.toString():'');
+        row.accepted=true;row.times.push(ms);row.lengths.push(s.length);row.moves.push(s.trim().split(/\s+/).length);
+        const v=validate(id,s);if(v.length)row.invalid.push(v.join('; ')+' :: '+s.slice(0,120));if(i<2)row.samples.push(s);
+      }catch(e){row.errors.push((e&&e.name?e.name+': ':'')+(e&&e.message||e));break}
+    }
+    probing=false;
+    const r={accepted:row.accepted,firstMs:row.times[0]!=null?Math.round(row.times[0]):null,
+      nextMeanMs:row.times.length>1?Math.round(mean(row.times.slice(1))):null,nextMaxMs:row.times.length>1?Math.round(Math.max(...row.times.slice(1))):null,
+      generated:row.times.length,chars:row.lengths.length?[Math.min(...row.lengths),Math.max(...row.lengths)]:null,moves:row.moves.length?[Math.min(...row.moves),Math.max(...row.moves)]:null,
+      notationValid:row.accepted?row.invalid.length===0:null,invalid:row.invalid.slice(0,3),errors:row.errors,longTasksOver50ms:long.length,longestTaskMs:long.length?Math.max(...long):0,maxFrameGapMs:Math.round(gap),samples:row.samples};
+    result.events[id]=r;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td><b>${id}</b></td><td class="${r.accepted?'ok':'bad'}">${r.accepted?'yes':'NO'}</td><td>${r.firstMs??'-'} ms</td><td>${r.nextMeanMs??'-'} / ${r.nextMaxMs??'-'} ms</td><td>${r.chars?r.chars.join('-')+' / '+r.moves.join('-'):'-'}</td>
+    <td class="${r.notationValid===true?'ok':r.notationValid===false?'bad':'warn'}">${r.notationValid===true?'valid':r.notationValid===false?'INVALID':'-'}</td><td class="${r.longTasksOver50ms?'warn':'ok'}">${r.longTasksOver50ms} long tasks (max ${r.longestTaskMs} ms), frame gap ${r.maxFrameGapMs} ms</td>
+    <td id="sample">${r.errors.length?'<span class="bad">'+r.errors.join(' | ')+'</span>':''}${r.invalid.length?'<br><span class="bad">'+r.invalid[0].replace(/</g,'&lt;')+'</span>':''}<br>${(r.samples[0]||'').replace(/</g,'&lt;').slice(0,160)}</td>`;
+    tb.appendChild(tr);
+  }
+  $('status').innerHTML='<span class="ok">Done.</span> Click "Copy JSON result" and send it back.';$('go').disabled=false;$('copy').disabled=false;
+};
+$('copy').onclick=async()=>{const txt=JSON.stringify(result,null,1);try{await navigator.clipboard.writeText(txt);$('copy').textContent='Copied'}catch{$('info').textContent=txt}};
+</script></body></html>
