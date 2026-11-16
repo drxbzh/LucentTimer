@@ -82,7 +82,7 @@ const blank = () => ({ k: 'counts', total: 0, bytes: 0, per: {} });
 const slot = (counts, puzzle) => counts.per[puzzle] || (counts.per[puzzle] = { u: 0, s: 0 });
 const getCounts = async meta => (await req(meta.get('counts'))) || blank();
 const getEpoch = async meta => { const row = await req(meta.get(EPOCH_KEY)); return row && Number.isSafeInteger(row.value) ? row.value : 0; };
-async function captureEpoch() { return run('readonly', (_store, meta) => getEpoch(meta)); }
+export async function captureEpoch() { return run('readonly', (_store, meta) => getEpoch(meta)); }
 const keyOf = (p, t) => p + '|' + t.replace(/\s+/g, ' ').trim();
 const recBytes = text => text.length * 3 + 120;
 const isQuota = e => !!e && (e.name === 'QuotaExceededError' || /quota/i.test(String(e.message)));
@@ -162,11 +162,9 @@ export function fgPending(n) { fg = Math.max(0, fg + n); }
 
 // Recording is independent of pause/auto-build. Capture the epoch immediately when this request begins; if deletion commits
 // before the record transaction, the expected-epoch check rejects it. A genuinely later displayed scramble captures the new epoch.
-export async function noteFresh(puzzle, text) {
+export async function noteFresh(puzzle, text, expectedEpoch) {
   if (unavailable || !isPuzzle(puzzle)) return false;
-  let expectedEpoch;
-  try { expectedEpoch = await captureEpoch(); }
-  catch (error) { lastError = 'Could not record this scramble: ' + (error.message || error); emit(); return false; }
+  if (!Number.isSafeInteger(expectedEpoch) || expectedEpoch < 0) return false;
   clearFailure(puzzle);
   try {
     const result = await addScrambles(puzzle, [text], { used: true, expectedEpoch, canAdd: () => true });
@@ -296,3 +294,9 @@ async function body() {
     generating = false; emit(); await sleep(YIELD_MS);
   }
 }
+
+// Expected final behaviour
+// An online scramble request captures the library epoch before generating its scramble. If deleteAll() commits while that
+// request is still running, the request's later recording attempt uses the old epoch and is rejected by the existing
+// atomic IndexedDB check.
+// A genuinely new request started after deletion captures the new epoch and can be recorded normally.
