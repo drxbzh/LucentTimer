@@ -317,7 +317,7 @@ async function generateScramble(force){
   try{
     let text=null,err=null;
     await libReady;
-    const expectedEpoch = await Library.captureEpoch();
+    let expectedEpoch=null;try{expectedEpoch=await Library.captureEpoch()}catch{} // failure => null: noteFresh fails closed (not recorded) but the scramble is still generated and shown
     if(navigator.onLine!==false){try{text=await freshScramble(puzzle)}catch(e){err=e}}
     if(token!==scrambleToken)return;
     if(text){showScramble(text);Library.noteFresh(puzzle,text,expectedEpoch);return}
