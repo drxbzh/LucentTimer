@@ -47,7 +47,7 @@ const dockIsOpen=()=>settings.dockOpen===true;
 function applyDock(){const o=dockIsOpen(),t=$('dockToggle');$('dock').dataset.open=String(o);t.setAttribute('aria-expanded',String(o));t.setAttribute('aria-label',o?'Hide tool bar':'Show tool bar');if(!o)dock.closePop()}
 function setDock(on){settings.dockOpen=!!on;save();applyDock()}
 $('dockToggle').onclick=()=>{setDock(!dockIsOpen());$('dockToggle').blur()};
-// Solve Overview tab: open/collapsed. Until the user chooses, it is open on wide screens and collapsed on narrow ones.
+// Solve Overview tab: open/collapsed. Until the user chooses it is open on wide screens and collapsed on narrow ones.
 const overviewIsOpen=()=>typeof settings.overviewOpen==='boolean'?settings.overviewOpen:window.innerWidth>=700;
 function applyOverview(){const o=overviewIsOpen(),t=$('overviewToggle');$('overview').dataset.open=String(o);t.setAttribute('aria-expanded',String(o));t.setAttribute('aria-label',o?'Hide solve overview':'Show solve overview')}
 function setOverview(on){settings.overviewOpen=!!on;save();applyOverview()}
@@ -245,7 +245,7 @@ document.addEventListener('pointerup',e=>{
   const p=press,dx=e.clientX-p.x,dy=e.clientY-p.y;
   if((effectivePlatformMode()==='mobile'||e.pointerType==='touch')&&Math.abs(dx)>SWIPE&&Math.abs(dx)>Math.abs(dy)*1.25){pressEnd(true);
     // Swipe zones: a swipe that starts on the LEFT half opens the Tool Bar, one that starts on the RIGHT half opens Solve Overview.
-    // A swipe back toward the edge closes the panel that is already open.
+    // Swipe back toward the edge closes the panel that is already open.
     const fromLeft=p.x<window.innerWidth/2;
     if(dx>0){if(fromLeft)setDock(true);else if(overviewIsOpen())setOverview(false)}
     else{if(!fromLeft)setOverview(true);else if(dockIsOpen())setDock(false)}
@@ -316,9 +316,11 @@ async function generateScramble(force){
   Library.fgPending(1);
   try{
     let text=null,err=null;
+    await libReady;
+    let expectedEpoch=null;try{expectedEpoch=await Library.captureEpoch()}catch{} // failure => null: noteFresh fails closed (not recorded) but the scramble is still generated and shown
     if(navigator.onLine!==false){try{text=await freshScramble(puzzle)}catch(e){err=e}}
     if(token!==scrambleToken)return;
-    if(text){showScramble(text);libReady.then(()=>Library.noteFresh(puzzle,text));return}
+    if(text){showScramble(text);Library.noteFresh(puzzle,text,expectedEpoch);return}
     await libReady;if(token!==scrambleToken)return;
     const saved=await Library.takeUnused(puzzle);
     if(token!==scrambleToken)return;
@@ -370,3 +372,4 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 render();show(0);generateScramble();applyWake();initLibraryUI();
 if('serviceWorker'in navigator&&location.protocol.startsWith('http'))addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 })();
+
