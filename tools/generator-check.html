@@ -12,7 +12,7 @@ pre{background:#0c0d12;padding:12px;border-radius:8px;overflow:auto;max-height:2
 #sample{max-width:340px;word-break:break-word;color:#9a9db0}
 </style></head><body>
 <h1>Lucent Timer: real cubing.js generator check</h1>
-<p>Loads the real cubing.js scramble module from the CDN (same URL the timer uses), then for each of the 11 event IDs generates several real scrambles, times them, validates the notation, and watches the main thread. Needs an internet connection. Nothing here touches your timer data.</p>
+<p>Loads the locally bundled cubing.js scramble module (the same file the timer uses), then for each of the 11 event IDs generates several real scrambles, times them, validates the notation, and watches the main thread. Nothing here touches your timer data. Serve the app over http(s), not file://.</p>
 <label>Scrambles per event <input id="n" type="number" min="2" max="50" value="8" style="width:70px"></label>
 <button id="go">Run check</button> <button id="copy" disabled>Copy JSON result</button>
 <p id="status"></p>
@@ -20,7 +20,7 @@ pre{background:#0c0d12;padding:12px;border-radius:8px;overflow:auto;max-height:2
 <h3>Module information</h3><pre id="info">(not run yet)</pre>
 <script type="module">
 import {validate} from './validators.mjs';
-const URL_='https://cdn.cubing.net/v0/js/cubing/scramble';
+const URL_='../vendor/cubing/scramble.js';
 const IDS=['222','333','444','555','666','777','clock','minx','pyram','skewb','sq1'];
 const $=id=>document.getElementById(id);let result=null;
 let long=[],gap=0,last=0,probing=false;
@@ -34,8 +34,8 @@ $('go').onclick=async()=>{
   try{mod=await import(URL_)}catch(e){$('status').innerHTML='<span class="bad">Could not load the module: '+e.message+'</span>';$('go').disabled=false;return}
   result.moduleExports=Object.keys(mod);
   let info='scramble module exports: '+Object.keys(mod).join(', ')+'\n';
-  try{const pz=await import('https://cdn.cubing.net/v0/js/cubing/puzzles');info+='puzzles module exports: '+Object.keys(pz).join(', ')+'\n';
-    if(pz.wcaEvents){const ev=await (typeof pz.wcaEvents==='function'?pz.wcaEvents():pz.wcaEvents);result.wcaEvents=[...ev];info+='wcaEvents: '+[...ev].join(', ')+'\n'}}catch(e){info+='(puzzles module not readable: '+e.message+')\n'}
+  try{const m=await (await fetch('../vendor/cubing/manifest.json')).json();result.bundle={version:m.version,assetCount:m.assetCount,totalBytes:m.totalBytes,workerChunk:m.workerChunk};
+    info+='local bundle: cubing '+m.version+', '+m.assetCount+' assets, '+(m.totalBytes/1048576).toFixed(2)+' MiB\nworker: '+m.workerChunk+'\n'}catch(e){info+='(manifest not readable: '+e.message+')\n'}
   $('info').textContent=info;
   for(const id of IDS){
     $('status').textContent='Testing '+id+'…';

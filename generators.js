@@ -1,10 +1,11 @@
-// Online scramble source. Fresh scrambles come from cubing.js (MPL-2.0 / GPL-3.0-or-later dual licence; used unmodified
-// under MPL-2.0), which generates them locally in the browser inside its own Web Worker. The module itself is loaded from
-// the cubing.js CDN, so generation needs a connection (the offline library exists for exactly that reason).
-// Risk: "v0" is a moving target on a third-party CDN. If a pinned/self-hosted copy becomes possible, change CUBING_URL only.
+// Fresh scrambles come from a pinned, locally served build of cubing.js 0.66.1
+// (MPL-2.0 / GPL-3.0-or-later dual licence; used unmodified under MPL-2.0). The bundle in
+// ./vendor/cubing/ generates scrambles locally in the browser inside cubing's own Web Worker,
+// so generation works offline once the app has been cached. See vendor/cubing/THIRD_PARTY_NOTICES.md.
+// The module is loaded on demand, so foreground scramble generation never waits for app start-up.
 import { PUZZLES } from './puzzles.js';
 
-export const CUBING_URL = 'https://cdn.cubing.net/v0/js/cubing/scramble';
+export const CUBING_URL = './vendor/cubing/scramble.js';
 let loading = null;
 
 // Failure categories (err.code), so callers can tell a temporary problem from a permanently unsupported event:
