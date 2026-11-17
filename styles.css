@@ -39,7 +39,9 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--timer
 #time.ready{color:var(--ready,var(--accent))}
 #status{min-height:1em;color:var(--t-muted);font-size:.72rem;font-weight:700;letter-spacing:.2em;opacity:0;visibility:hidden}
 #status.visible{opacity:1;visibility:visible}
-#scramblePanel{position:absolute;top:max(5vh,calc(env(safe-area-inset-top) + 18px));left:50%;transform:translateX(-50%);width:min(900px,92vw);display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+#scramblePanel{position:absolute;z-index:2;top:max(5vh,calc(env(safe-area-inset-top) + 18px));left:50%;transform:translateX(-50%);width:min(900px,92vw);display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+/* The transform above makes #scramblePanel its own stacking context, so the popup's own z-index only ranks it inside the
+   panel. The panel itself needs a z-index to sit above #timerStack (a later positioned sibling), otherwise large timer digits paint over the popup. */
 #scramble{font-size:clamp(.88rem,2.2vw,1.12rem);line-height:1.65;letter-spacing:.025em;color:var(--t-text);overflow-wrap:anywhere;max-height:5.2em;overflow:auto}
 #scramble.scramble-error{color:var(--t-muted);font-size:.82rem}
 #newScramble{border:1px solid var(--t-bc);border-radius:var(--r-btn);background:var(--btn-fill);color:var(--t-muted);padding:7px 13px;font:inherit;font-size:.72rem;cursor:pointer}
