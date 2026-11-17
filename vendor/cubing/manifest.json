@@ -1,0 +1,159 @@
+{
+  "package": "cubing",
+  "version": "0.66.1",
+  "entry": "./vendor/cubing/scramble.js",
+  "workerChunk": "./vendor/cubing/chunks/search-worker-entry-ANJBSHXZ.js",
+  "assetCount": 27,
+  "totalBytes": 1217277,
+  "builtWith": {
+    "esbuild": "0.28.2",
+    "format": "esm",
+    "minify": true,
+    "target": "es2022"
+  },
+  "inputs": [
+    "entry.js",
+    "node_modules/cubing/dist/lib/cubing/chunks/big-puzzle-orientation-KJL4OFV2.js",
+    "node_modules/cubing/dist/lib/cubing/chunks/chunk-6R47S6MP.js",
+    "node_modules/cubing/dist/lib/cubing/chunks/chunk-7LEVC3YR.js",
+    "node_modules/cubing/dist/lib/cubing/chunks/chunk-BHVTDDUY.js",
+    "node_modules/cubing/dist/lib/cubing/chunks/chunk-IIJFVP3K.js",
+    "node_modules/cubing/dist/lib/cubing/chunks/chunk-LBER75W4.js",
+    "node_modules/cubing/dist/lib/cubing/chunks/chunk-NJ66FRKF.js",
+    "node_modules/cubing/dist/lib/cubing/chunks/chunk-QOLD6GH2.js",
+    "node_modules/cubing/dist/lib/cubing/chunks/chunk-QZK3M7IM.js",
+    "node_modules/cubing/dist/lib/cubing/chunks/chunk-RDKH6CDA.js",
+    "node_modules/cubing/dist/lib/cubing/chunks/chunk-UKAXYOG2.js",
+    "node_modules/cubing/dist/lib/cubing/chunks/chunk-YJH5LHFN.js",
+    "node_modules/cubing/dist/lib/cubing/chunks/inside-UWSZBO4Y.js",
+    "node_modules/cubing/dist/lib/cubing/chunks/puzzles-dynamic-3x3x3-CMH2HHH5.js",
+    "node_modules/cubing/dist/lib/cubing/chunks/puzzles-dynamic-4x4x4-UFAQS3QG.js",
+    "node_modules/cubing/dist/lib/cubing/chunks/puzzles-dynamic-megaminx-EFR4GQFA.js",
+    "node_modules/cubing/dist/lib/cubing/chunks/puzzles-dynamic-side-events-KF3PEOJN.js",
+    "node_modules/cubing/dist/lib/cubing/chunks/puzzles-dynamic-unofficial-6BF3EWTI.js",
+    "node_modules/cubing/dist/lib/cubing/chunks/search-dynamic-sgs-side-events-5GQDHSJR.js",
+    "node_modules/cubing/dist/lib/cubing/chunks/search-dynamic-sgs-unofficial-YM23KVCN.js",
+    "node_modules/cubing/dist/lib/cubing/chunks/search-dynamic-solve-3x3x3-6UMZH4WB.js",
+    "node_modules/cubing/dist/lib/cubing/chunks/search-dynamic-solve-4x4x4-KNSBAM7Q.js",
+    "node_modules/cubing/dist/lib/cubing/chunks/search-dynamic-solve-fto-CSXJYISF.js",
+    "node_modules/cubing/dist/lib/cubing/chunks/search-dynamic-solve-kilominx-EHAUQJXS.js",
+    "node_modules/cubing/dist/lib/cubing/chunks/search-dynamic-solve-master_tetraminx-ZQ25QK7E.js",
+    "node_modules/cubing/dist/lib/cubing/chunks/search-worker-entry.js",
+    "node_modules/cubing/dist/lib/cubing/chunks/twips-IMF5RNH5.js",
+    "node_modules/cubing/dist/lib/cubing/chunks/twips_wasm_bg-TJNYGA2C-4JIZWC6Q.js",
+    "node_modules/cubing/dist/lib/cubing/puzzle-geometry/index.js",
+    "node_modules/cubing/dist/lib/cubing/scramble/index.js",
+    "node_modules/cubing/dist/lib/cubing/search/index.js",
+    "node_modules/random-uint-below/dist/esm/index.js"
+  ],
+  "files": [
+    {
+      "path": "./vendor/cubing/scramble.js",
+      "bytes": 324
+    },
+    {
+      "path": "./vendor/cubing/chunks/big-puzzle-orientation-KJL4OFV2-ALBGWV5M.js",
+      "bytes": 828
+    },
+    {
+      "path": "./vendor/cubing/chunks/chunk-5CXYQZRV.js",
+      "bytes": 1519
+    },
+    {
+      "path": "./vendor/cubing/chunks/chunk-IMIQGAQY.js",
+      "bytes": 11732
+    },
+    {
+      "path": "./vendor/cubing/chunks/chunk-JARMIZCT.js",
+      "bytes": 3226
+    },
+    {
+      "path": "./vendor/cubing/chunks/chunk-KYMPLTHH.js",
+      "bytes": 21392
+    },
+    {
+      "path": "./vendor/cubing/chunks/chunk-LD4OCB6G.js",
+      "bytes": 43800
+    },
+    {
+      "path": "./vendor/cubing/chunks/chunk-OO37SIZC.js",
+      "bytes": 371
+    },
+    {
+      "path": "./vendor/cubing/chunks/chunk-TORY3DKJ.js",
+      "bytes": 578
+    },
+    {
+      "path": "./vendor/cubing/chunks/chunk-UOY2JPM3.js",
+      "bytes": 34
+    },
+    {
+      "path": "./vendor/cubing/chunks/inside-UWSZBO4Y-P7VFY7U7.js",
+      "bytes": 11080
+    },
+    {
+      "path": "./vendor/cubing/chunks/puzzle-geometry-7NQM5V23.js",
+      "bytes": 72702
+    },
+    {
+      "path": "./vendor/cubing/chunks/puzzles-dynamic-3x3x3-CMH2HHH5-VSNLUTBS.js",
+      "bytes": 23626
+    },
+    {
+      "path": "./vendor/cubing/chunks/puzzles-dynamic-4x4x4-UFAQS3QG-7F2GNN73.js",
+      "bytes": 8253
+    },
+    {
+      "path": "./vendor/cubing/chunks/puzzles-dynamic-megaminx-EFR4GQFA-MFUOFJ2I.js",
+      "bytes": 16737
+    },
+    {
+      "path": "./vendor/cubing/chunks/puzzles-dynamic-side-events-KF3PEOJN-6JMLOF5S.js",
+      "bytes": 136919
+    },
+    {
+      "path": "./vendor/cubing/chunks/puzzles-dynamic-unofficial-6BF3EWTI-6FJCRUA4.js",
+      "bytes": 40616
+    },
+    {
+      "path": "./vendor/cubing/chunks/search-dynamic-sgs-side-events-5GQDHSJR-ELEESLYC.js",
+      "bytes": 31387
+    },
+    {
+      "path": "./vendor/cubing/chunks/search-dynamic-sgs-unofficial-YM23KVCN-EFNHU6Z6.js",
+      "bytes": 27585
+    },
+    {
+      "path": "./vendor/cubing/chunks/search-dynamic-solve-3x3x3-6UMZH4WB-P6HKNMNK.js",
+      "bytes": 23803
+    },
+    {
+      "path": "./vendor/cubing/chunks/search-dynamic-solve-4x4x4-KNSBAM7Q-IKJQDSBZ.js",
+      "bytes": 27702
+    },
+    {
+      "path": "./vendor/cubing/chunks/search-dynamic-solve-fto-CSXJYISF-KBJRFPQO.js",
+      "bytes": 19059
+    },
+    {
+      "path": "./vendor/cubing/chunks/search-dynamic-solve-kilominx-EHAUQJXS-NNGNKNKT.js",
+      "bytes": 7984
+    },
+    {
+      "path": "./vendor/cubing/chunks/search-dynamic-solve-master_tetraminx-ZQ25QK7E-DFVJMU6Y.js",
+      "bytes": 8104
+    },
+    {
+      "path": "./vendor/cubing/chunks/search-worker-entry-ANJBSHXZ.js",
+      "bytes": 327
+    },
+    {
+      "path": "./vendor/cubing/chunks/twips_wasm_bg-TJNYGA2C-4JIZWC6Q-CCBO2B23.js",
+      "bytes": 670614
+    },
+    {
+      "path": "./vendor/cubing/chunks/twips-IMF5RNH5-ULHYSASS.js",
+      "bytes": 6975
+    }
+  ]
+}

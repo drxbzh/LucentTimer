@@ -302,9 +302,11 @@ const scramblePopOpen=()=>!$('scramblePop').hidden;
 function setScramblePop(on){$('scramblePop').hidden=!on;$('scrambleGear').setAttribute('aria-expanded',String(!!on));$('scrambleGear').classList.toggle('active',!!on)}
 function closeScramblePop(){if(scramblePopOpen())setScramblePop(false)}
 function showScramble(text){currentScramble=text;$('scramble').textContent=text;$('scramble').classList.remove('scramble-error')}
-// Scramble delivery. Online: a fresh scramble from the online generator is shown first, and only afterwards recorded in the
-// offline library (as used) and used to trigger background top-ups. Offline (or if the online generator fails): the next unused
-// saved scramble for this puzzle, marked used in the same database transaction. Custom length (3x3 only) is local and never stored.
+// Scramble delivery. A fresh scramble from the local generator is shown first, and only afterwards recorded in the
+// offline library (as used) and used to trigger background top-ups. If local generation fails, the next unused
+// saved scramble for this puzzle is shown, marked used in the same database transaction. Custom length (3x3 only) is
+// local and never stored. The generator is self-hosted, so it is tried even when the browser reports no connection;
+// the saved library is the fallback, not the offline primary.
 let scrambleToken=0;
 const libReady=Library.init({isBusy:()=>state!=='idle'||!!press,selected:settings.puzzle}).catch(()=>{});
 async function generateScramble(force){
@@ -316,11 +318,17 @@ async function generateScramble(force){
   Library.fgPending(1);
   try{
     let text=null,err=null;
-    await libReady;
-    let expectedEpoch=null;try{expectedEpoch=await Library.captureEpoch()}catch{} // failure => null: noteFresh fails closed (not recorded) but the scramble is still generated and shown
-    if(navigator.onLine!==false){try{text=await freshScramble(puzzle)}catch(e){err=e}}
+    // The local generator does not depend on the saved-scramble library, so start it immediately. The
+    // library is only needed afterwards, to record the result; the fallback below awaits it if generation fails.
+    const epochReady=libReady.then(()=>Library.captureEpoch()).catch(()=>null); // failure => null: noteFresh fails closed (not recorded)
+    try{text=await freshScramble(puzzle)}catch(e){err=e}
     if(token!==scrambleToken)return;
-    if(text){showScramble(text);Library.noteFresh(puzzle,text,expectedEpoch);return}
+    if(text){
+      showScramble(text);
+      // Record after showing, without holding the foreground path for a slow library start-up.
+      epochReady.then(expectedEpoch=>Library.noteFresh(puzzle,text,expectedEpoch));
+      return;
+    }
     await libReady;if(token!==scrambleToken)return;
     const saved=await Library.takeUnused(puzzle);
     if(token!==scrambleToken)return;
