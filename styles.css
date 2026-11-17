@@ -150,3 +150,9 @@ nav{border-top:1px solid var(--line)}
 .range-control{display:block;width:100%;margin:5px 0 15px;accent-color:var(--accent)}
 .platform-setting{padding-bottom:10px}
 body[data-platform="desktop"] #screen{touch-action:manipulation}
+/* Scramble popover and puzzle selector helpers */
+.popSep{height:1px;background:var(--line);margin:14px 0 12px}
+.puzzleRow{margin-bottom:0}
+.puzzleRow select{width:100%;max-width:none}
+#scramble{white-space:pre-line}
+.autoBtn:disabled,.lenRow input:disabled,#scrambleLength:disabled{opacity:.45;cursor:default}

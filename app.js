@@ -2,8 +2,6 @@ import {initAppearance,APPEARANCE_DEFAULTS} from './appearance.js';
 import {initDock,DOCK_DEFAULT} from './dock.js';
 import {PUZZLES,PUZZLE_IDS,DEFAULT_PUZZLE,isPuzzle,puzzleName} from './puzzles.js';
 import {freshScramble} from './generators.js';
-import * as Library from './scrambleLibrary.js';
-import {initLibraryUI} from './libraryUI.js';
 (()=>{
 const $=id=>document.getElementById(id);
 const defaults={startMethod:'hold',inspectionEnabled:false,inspectionLength:15,precision:2,theme:'dark',leadingZero:true,keepAwake:true,vibrationEnabled:true,soundEnabled:true,scrambleLength:0,platformMode:'auto',puzzle:DEFAULT_PUZZLE,timerSize:100,timerFont:'roboto',timerWeight:'light',dockItems:[...DOCK_DEFAULT],overviewOpen:null,dockOpen:false,...APPEARANCE_DEFAULTS};
@@ -302,48 +300,44 @@ const scramblePopOpen=()=>!$('scramblePop').hidden;
 function setScramblePop(on){$('scramblePop').hidden=!on;$('scrambleGear').setAttribute('aria-expanded',String(!!on));$('scrambleGear').classList.toggle('active',!!on)}
 function closeScramblePop(){if(scramblePopOpen())setScramblePop(false)}
 function showScramble(text){currentScramble=text;$('scramble').textContent=text;$('scramble').classList.remove('scramble-error')}
-// Scramble delivery. A fresh scramble from the local generator is shown first, and only afterwards recorded in the
-// offline library (as used) and used to trigger background top-ups. If local generation fails, the next unused
-// saved scramble for this puzzle is shown, marked used in the same database transaction. Custom length (3x3 only) is
-// local and never stored. The generator is self-hosted, so it is tried even when the browser reports no connection;
-// the saved library is the fallback, not the offline primary.
+// Scramble delivery. Normal scrambles come straight from the local generator (freshScramble), which is the self-hosted
+// cubing.js bundle and needs no network. The latest request always wins: a result that arrives after a newer request
+// (or a puzzle switch) started is dropped. A custom length (3x3 only) uses local random moves. If generation fails, an
+// error is shown and New scramble (or N) stays available to retry.
 let scrambleToken=0;
-const libReady=Library.init({isBusy:()=>state!=='idle'||!!press,selected:settings.puzzle}).catch(()=>{});
 async function generateScramble(force){
   const puzzle=settings.puzzle,name=puzzleName(puzzle);
   const custom=puzzle==='333'?scrambleOptions().length:0;
   if(custom>0){scrambleToken++;scrambleBusy=false;$('newScramble').disabled=false;showScramble(randomMoveScramble(Math.min(custom,200)));return}
   if(scrambleBusy&&!force)return;
   const token=++scrambleToken;scrambleBusy=true;$('newScramble').disabled=true;$('scramble').textContent='Generating scramble…';$('scramble').classList.remove('scramble-error');currentScramble='';
-  Library.fgPending(1);
   try{
-    let text=null,err=null;
-    // The local generator does not depend on the saved-scramble library, so start it immediately. The
-    // library is only needed afterwards, to record the result; the fallback below awaits it if generation fails.
-    const epochReady=libReady.then(()=>Library.captureEpoch()).catch(()=>null); // failure => null: noteFresh fails closed (not recorded)
-    try{text=await freshScramble(puzzle)}catch(e){err=e}
+    const text=await freshScramble(puzzle);
     if(token!==scrambleToken)return;
-    if(text){
-      showScramble(text);
-      // Record after showing, without holding the foreground path for a slow library start-up.
-      epochReady.then(expectedEpoch=>Library.noteFresh(puzzle,text,expectedEpoch));
-      return;
-    }
-    await libReady;if(token!==scrambleToken)return;
-    const saved=await Library.takeUnused(puzzle);
+    showScramble(text);
+  }catch(err){
     if(token!==scrambleToken)return;
-    if(saved){showScramble(saved);return}
-    const snap=Library.getSnapshot(),offline=navigator.onLine===false||(err&&err.code==='network');
-    $('scramble').textContent=snap.error&&/not available/.test(snap.error)?'Offline scrambles are not available in this browser. Connect to the internet to get a scramble.'
-      :offline?`No unused saved ${name} scrambles left. Connect to the internet to get new ones.`:`Could not generate a ${name} scramble. Check your connection and try again.`;
+    $('scramble').textContent=err&&err.code==='network'?'Could not load the scramble generator. Reload the app, then press New scramble to try again.':`Could not generate a ${name} scramble. Press New scramble to try again.`;
     $('scramble').classList.add('scramble-error');currentScramble='';
-  }finally{Library.fgPending(-1);if(token===scrambleToken){scrambleBusy=false;$('newScramble').disabled=false}}
+  }finally{if(token===scrambleToken){scrambleBusy=false;$('newScramble').disabled=false}}
+}
+// The removed offline scramble library left an IndexedDB database and one localStorage key behind. Delete only those two,
+// quietly and off the start-up path. Nothing is awaited and every failure is ignored. If another open tab still holds the
+// old database, the delete stays queued ("blocked") and completes once that tab closes or reloads. It never touches
+// ct-settings, ct-solves-v2, ct-solves or the lucent-timer-media database.
+function removeLegacyLibraryData(){
+  try{localStorage.removeItem('ct-library-state')}catch{}
+  try{
+    if(!self.indexedDB)return;
+    const req=indexedDB.deleteDatabase('lucent-scramble-library');
+    req.onsuccess=req.onerror=req.onblocked=()=>{};
+  }catch{}
 }
 function setPuzzle(id){
   if(!isPuzzle(id)||id===settings.puzzle)return;
   if(state!=='idle'){render();return}
   solvesByPuzzle[settings.puzzle]=solves;settings.puzzle=id;solves=solvesByPuzzle[id]||(solvesByPuzzle[id]=[]);
-  resultShown=false;timesExpanded=false;cancelDelete();setStatus('');show(0);save();Library.setSelected(id);render();generateScramble(true);
+  resultShown=false;timesExpanded=false;cancelDelete();setStatus('');show(0);save();render();generateScramble(true);
 }
 document.querySelectorAll('.puzzleSelect').forEach(sel=>{
   sel.innerHTML=PUZZLES.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
@@ -377,7 +371,8 @@ async function applyWake(){
 }
 $('keepAwake').addEventListener('change',e=>{settings.keepAwake=e.target.checked;save();applyWake()});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')applyWake()});
-render();show(0);generateScramble();applyWake();initLibraryUI();
+render();show(0);generateScramble();applyWake();
+addEventListener('load',()=>setTimeout(removeLegacyLibraryData,1500));
 if('serviceWorker'in navigator&&location.protocol.startsWith('http'))addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 })();
 

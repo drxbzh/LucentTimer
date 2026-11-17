@@ -25,8 +25,7 @@ Upload the project folder to your existing HTTPS static host. For an existing Ne
 - Main-display inspection countdown with brief audio/haptic warnings.
 - Optional vibration and audio cues.
 - All 11 WCA puzzles (2×2 to 7×7, Clock, Megaminx, Pyraminx, Skewb, Square-1), chosen with the Puzzle dropdown in the scramble gear popover (or Settings → Scramble). Each puzzle has its own solve history, Ao5/Ao12 and stats. Existing solves were migrated to 3×3 (the old `ct-solves` key is left untouched).
-- Scrambles are generated locally by a pinned, self-hosted build of cubing.js 0.66.1 (MPL-2.0, used unmodified under that licence; scramble algorithms by Chen Shuang, Lucas Garron, Tom Rokicki and others; see `vendor/cubing/THIRD_PARTY_NOTICES.md`). All 11 events work offline once the app has been cached. A custom length (1 to 200 random moves) is 3×3 only, never truncates a normal scramble, and never touches the library.
-- Offline scramble library (Settings → Scramble Library): scrambles shown online are saved as used, extra ones are generated quietly in the background (never while solving) and saved unused, so they can be served offline. Hard limit 10,000 records in total; nothing is ever deleted automatically and used scrambles are never shown again. Controls: automatic building, pause, "Build remaining library" (with cancel) and delete (with confirmation; also turns automatic building off). Stored in its own IndexedDB database `lucent-scramble-library`.
+- Scrambles are generated locally by a pinned, self-hosted build of cubing.js 0.66.1 (MPL-2.0, used unmodified under that licence; scramble algorithms by Chen Shuang, Lucas Garron, Tom Rokicki and others; see `vendor/cubing/THIRD_PARTY_NOTICES.md`). All 11 events work offline once the app has been cached. A custom length (1 to 200 random moves) is 3×3 only and never truncates a normal scramble.
 - Recent solves, best, mean, dark/light appearance, precision, and screen wake lock (on by default).
 
 ## Appearance customisation (Settings → Display)
@@ -43,7 +42,7 @@ Storage: all preferences are in the same `ct-settings` localStorage object (inva
 
 ## Scramble connectivity
 
-Scrambles are generated entirely on the device by the locally served `cubing.js` bundle in `vendor/cubing/` (pinned to 0.66.1). There is no runtime request to `cdn.cubing.net`, and all 11 WCA events work with the network disconnected once the app has been cached by the service worker. The old offline scramble library is still available as a fallback if local generation fails and is still built by default in Settings → Scramble Library.
+Scrambles are generated entirely on the device by the locally served `cubing.js` bundle in `vendor/cubing/` (pinned to 0.66.1). There is no runtime request to `cdn.cubing.net`, and all 11 WCA events work with the network disconnected once the app has been cached by the service worker. The service worker (`sw.js`) precaches the app shell together with the generator entry, its search worker and every chunk listed in `vendor/cubing/assets.js`, so the installed PWA launches and generates scrambles offline. If generation fails, the scramble area shows an error and New scramble (or `N`) retries.
 
 To rebuild the bundle after changing its pinned version, see `tools/cubing-vendor/README.md`. Licence texts and third-party notices are in `vendor/cubing/`.
 

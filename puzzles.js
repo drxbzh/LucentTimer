@@ -1,4 +1,4 @@
-// The 11 WCA events Lucent Timer supports. `id` is what is stored (settings, solves, offline library);
+// The 11 WCA events Lucent Timer supports. `id` is what is stored (settings, solves);
 // `event` is the cubing.js event code passed to randomScrambleForEvent. Order = order shown in the selector.
 export const PUZZLES = [
   { id: '222',   name: '2×2',      event: '222' },
